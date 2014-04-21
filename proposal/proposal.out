@@ -1,7 +1,7 @@
 \BOOKMARK [1][-]{section.1}{Project Description}{}% 1
 \BOOKMARK [1][-]{section.2}{Highlevel Architecture}{}% 2
-\BOOKMARK [2][-]{subsection.2.1}{Simulator}{section.2}% 3
-\BOOKMARK [2][-]{subsection.2.2}{AKWDS}{section.2}% 4
-\BOOKMARK [2][-]{subsection.2.3}{Visualization}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.1}{Control}{section.2}% 3
+\BOOKMARK [2][-]{subsection.2.2}{Communication}{section.2}% 4
+\BOOKMARK [2][-]{subsection.2.3}{Computation}{section.2}% 5
 \BOOKMARK [1][-]{section.3}{Parallel Plan}{}% 6
 \BOOKMARK [1][-]{section.4}{Project Schedule}{}% 7
