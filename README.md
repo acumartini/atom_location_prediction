@@ -1,4 +1,4 @@
-parallel_diffeq
+diffyq
 ===============
-Hello!
-A paralell implementation of a differential equaltion solver.
+
+A distributed parallel implementation of a differential equaltion solver.
