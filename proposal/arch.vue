@@ -1,14 +1,14 @@
-<!-- Tufts VUE 3.2.2 concept-map (arch.vue) 2014-04-21 -->
+<!-- Tufts VUE 3.2.2 concept-map (arch.vue) 2014-04-23 -->
 <!-- Tufts VUE: http://vue.tufts.edu/ -->
 <!-- Do Not Remove: VUE mapping @version(1.1) jar:file:/Applications/VUE.app/Contents/VUE.jar!/tufts/vue/resources/lw_mapping_1_1.xml -->
-<!-- Do Not Remove: Saved date Mon Apr 21 16:04:34 PDT 2014 by martini on platform Mac OS X 10.9.2 in JVM 1.6.0_65-b14-462-11M4609 -->
+<!-- Do Not Remove: Saved date Wed Apr 23 00:59:08 PDT 2014 by martini on platform Mac OS X 10.9.2 in JVM 1.6.0_65-b14-462-11M4609 -->
 <!-- Do Not Remove: Saving version @(#)VUE: built May 23 2013 at 2146 by tomadm on Linux 2.6.18-348.2.1.el5 i386 JVM 1.7.0_21-b11(bits=32) -->
 <?xml version="1.0" encoding="US-ASCII"?>
 <LW-MAP xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="none" ID="0" label="arch.vue"
-    created="1398115863909" x="0.0" y="0.0" width="1.4E-45"
-    height="1.4E-45" strokeWidth="0.0" autoSized="false">
-    <resource referenceCreated="1398121474149"
+    created="1398115863909" x="0.0" y="0.0" width="599.0" height="268.0"
+    strokeWidth="0.0" autoSized="false">
+    <resource referenceCreated="1398239948710" size="16536"
         spec="/Users/martini/git/diffyq/proposal/arch.vue" type="1" xsi:type="URLResource">
         <title>arch.vue</title>
         <property key="File" value="/Users/martini/git/diffyq/proposal/arch.vue"/>
@@ -235,10 +235,10 @@
         y="0.0" width="1.4E-45" height="1.4E-45" strokeWidth="0.0" autoSized="false">
         <URIString>http://vue.tufts.edu/rdf/resource/8688a879c0a8016801905690bd93131c</URIString>
     </layer>
-    <userZoom>1.8852459016393444</userZoom>
+    <userZoom>2.303839732888147</userZoom>
     <userOrigin x="-14.0" y="-17.75"/>
     <presentationBackground>#202020</presentationBackground>
-    <PathwayList currentPathway="0" revealerIndex="-1">
+    <PathwayList currentPathway="-1" revealerIndex="-1">
         <pathway ID="0" label="Untitled Pathway" created="1398115863908"
             x="0.0" y="0.0" width="1.4E-45" height="1.4E-45"
             strokeWidth="0.0" autoSized="false" currentIndex="-1" open="true">

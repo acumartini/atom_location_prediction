@@ -1,17 +1,18 @@
 \section{Parallel Plan}
 
-The Diffyq design includes several places to introduce and explore/optimize parallelism.
+The each stage of the project data flow includes several places to introduce and explore parallelism.
 
 \begin{description}
-\item[Data and Program Marshalling] Map Stenciling...
-\item[Stenciling Management] Communication minimization along borders...
-\item[Node Level Parallelism] Matrix Multiplication...
-\item[Data Reduction] Data reduction...
-\begin{enumerate}
-  \item Spacial subsampling
-  \item Temporal subsampling
-  \item Compression
-\end{enumerate}
+\item[Simulation] PETSc...
+\item[Machine Learning] Which algorithms and how...
+\item[Visualization] Visit, paraview...
+
+%\item[Data Reduction] Data reduction...
+%\begin{enumerate}
+%  \item Spacial subsampling
+%  \item Temporal subsampling
+%  \item Compression
+%\end{enumerate}
 \end{description}
 
 %We plan to look at system scaling by varying the number of initial objects in the simulation and the number of cannons available. We intend to look at wall clock time to complete a fixed number of simulation steps. We also intend to look at latency between the FOSA transmission time and BDS receive time to see if pipelining provides a significant benefit.

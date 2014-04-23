@@ -1,7 +1,11 @@
 \section*{Executive Summary}
-We will design a flexible system for solving large partial differential equations in a parallel distributed system.  The product of our this project will solve 3-dimensional models of any size for a given number of time steps.  Our system will take any size model and process it efficiently in parallel on multiple nodes.
 
-The size of the fields we will be simulating can be several gigabytes of data per simulation frame, which can easily exceed the memory of single node. However, since the evolution of a point in the field depends only on the neighbors, the data can be divided among a set of nodes that process independently with a small amount of communication. Additional parallelism can be gained by parallelizing the simulation on each node by splitting the problem into cache sized chunks. Lastly, to reduce overhead due to data output, frames will be saved less frequently than the simulation rate, and will be stored on each individual node.
+The Steck Lab is investigating the motion of a single atom in a Magneto Optical Trap (MOT).  The atom is imaged using a pair of aspheric lenses and a CCD camera.  Given an 2D image from the CCD, the lab wants to predict the probability distribution of the atom's location within the MOT.
+
+
+%We will design a flexible system for solving large partial differential equations in a parallel distributed system.  The product of our this project will solve 3-dimensional models of any size for a given number of time steps.  Our system will take any size model and process it efficiently in parallel on multiple nodes.
+
+%The size of the fields we will be simulating can be several gigabytes of data per simulation frame, which can easily exceed the memory of single node. However, since the evolution of a point in the field depends only on the neighbors, the data can be divided among a set of nodes that process independently with a small amount of communication. Additional parallelism can be gained by parallelizing the simulation on each node by splitting the problem into cache sized chunks. Lastly, to reduce overhead due to data output, frames will be saved less frequently than the simulation rate, and will be stored on each individual node.
 
 
 %TODO: Breif description of the motivations for this project and why we need to use a distributed parallel processing model...

@@ -1,9 +1,8 @@
-\BOOKMARK [1][-]{section.1}{Project Description}{}
-\BOOKMARK [1][-]{section.2}{Highlevel Architecture}{}
-\BOOKMARK [2][-]{subsection.2.1}{Control}{section.2}
-\BOOKMARK [2][-]{subsection.2.2}{Communication}{section.2}
-\BOOKMARK [2][-]{subsection.2.3}{Computation}{section.2}
-\BOOKMARK [2][-]{subsection.2.4}{Data Reduction and Storage}{section.2}
-\BOOKMARK [2][-]{subsection.2.5}{Data Format}{section.2}
-\BOOKMARK [1][-]{section.3}{Parallel Plan}{}
-\BOOKMARK [1][-]{section.4}{Project Schedule}{}
+\BOOKMARK [1][-]{section.1}{Project Description}{}% 1
+\BOOKMARK [1][-]{section.2}{Highlevel Architecture}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{Simulation}{section.2}% 3
+\BOOKMARK [2][-]{subsection.2.2}{Machine Learning}{section.2}% 4
+\BOOKMARK [2][-]{subsection.2.3}{Visualization}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.4}{Data Format}{section.2}% 6
+\BOOKMARK [1][-]{section.3}{Parallel Plan}{}% 7
+\BOOKMARK [1][-]{section.4}{Project Schedule}{}% 8
