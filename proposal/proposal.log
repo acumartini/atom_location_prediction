@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013) (format=pdflatex 2013.5.30)  23 APR 2014 12:44
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013) (format=pdflatex 2013.5.30)  23 APR 2014 16:32
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -828,19 +828,19 @@ LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/b/n' will be
 (Font)              scaled to size 17.28pt on input line 1.
 ) (./description.tex) (./architecture.tex
-<arch.png, id=44, 1112.155pt x 506.89375pt>
+<arch.png, id=44, 1110.1475pt x 392.46625pt>
 File: arch.png Graphic file (type png)
  <use arch.png>
-Package pdftex.def Info: arch.png used on input line 7.
-(pdftex.def)             Requested size: 444.85413pt x 202.7539pt.
+Package pdftex.def Info: arch.png used on input line 6.
+(pdftex.def)             Requested size: 444.05113pt x 156.9837pt.
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/b/n' will be
-(Font)              scaled to size 14.4pt on input line 21.
-) (./parallelism.texpdfTeX warning (ext4): destination with the same identifier
- (name{page.1}) has been already used, duplicate ignored
+(Font)              scaled to size 14.4pt on input line 19.
+pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has 
+been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.1 \section
-            {Parallel Plan} [1 <./arch.png>]) (./schedule.tex
+l.24 
+      [1 <./arch.png>]) (./parallelism.tex) (./schedule.tex
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
 (Font)              scaled to size 8.8pt on input line 3.
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
@@ -864,17 +864,7 @@ LaTeX Font Info:    Try loading font information for U+ntxsyc on input line 3.
 
 (/usr/local/texlive/2013/texmf-dist/tex/latex/newtx/untxsyc.fd
 File: untxsyc.fd 2012/04/12 Fontinst v1.933 font definitions for U/ntxsyc.
-)
-! Missing } inserted.
-<inserted text> 
-                }
-l.7 6
-      & Get classifiers working on acciss and extend/create code based on pr...
-I've put in what seems to be necessary to fix
-the current column of the current alignment.
-Try to go on, since this might almost work.
-
-)
+))
 Overfull \hbox (129.28734pt too wide) in paragraph at lines 3--139
 []
  []
@@ -908,7 +898,7 @@ Here is how much of TeX's memory you used:
 /usr/local/texlive/2013/texmf-dist/fonts/type1/public/libertine/LinLibertineT.p
 fb></usr/local/texlive/2013/texmf-dist/fonts/type1/public/libertine/LinLibertin
 eTB.pfb>
-Output written on proposal.pdf (3 pages, 315107 bytes).
+Output written on proposal.pdf (3 pages, 282105 bytes).
 PDF statistics:
  72 PDF objects out of 1000 (max. 8388607)
  63 compressed objects within 1 object stream
