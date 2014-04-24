@@ -1,11 +1,15 @@
 \section{Parallel Plan}
-
 The each stage of the project data flow includes several places to introduce and explore parallelism.
 
 \begin{description}
-\item[Simulation] PETSc...
+\item[Simulation] The two simulation approaches outlined our architecture section both are highly parallelizable problems.
+
+The first approach involving raytracing can be parallelized over each simulated ray while accumulating the results of the CCD image in a single 2D matrix.
+
+The second approach involves numerically solving differential equations. Existing differential equation libraries, such as PETSc, are capable of running in parallel. We will use one of these for simulating how light propegates from a point source, through lenses, to a CCD camera. Additionally, we can explore creating a more basic differential equation solver using MPI and basic linear algebra packages and compare performance to the more sophisticated PETSc library.
+
 \item[Machine Learning] There is at least one parallel machine learning library written in c++ that we can use as a starting point.  To get specialized functionality or algorithms that perform well for image recognition, we may need to extend existing libraries or code our own algorithms.  It is unclear whether a distributed program will be necessary to train the models given the number of features and size of the dataset.
-\item[Visualization] Visit, paraview...
+\item[Visualization] Applications such as Visit or ParaView are powerful visualization tools that can be run in a distributed enviornment. We can use these tools to generate animations and imagery of the solutions in parallel. It is possible that parallelization may prove unnessesary depending on how long it takes our data to render, but the feature is avaliable if we need it.
 
 %\item[Data Reduction] Data reduction...
 %\begin{enumerate}
