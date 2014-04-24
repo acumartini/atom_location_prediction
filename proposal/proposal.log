@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013) (format=pdflatex 2013.5.30)  23 APR 2014 16:32
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013) (format=pdflatex 2013.5.30)  23 APR 2014 21:38
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -865,7 +865,7 @@ LaTeX Font Info:    Try loading font information for U+ntxsyc on input line 3.
 (/usr/local/texlive/2013/texmf-dist/tex/latex/newtx/untxsyc.fd
 File: untxsyc.fd 2012/04/12 Fontinst v1.933 font definitions for U/ntxsyc.
 ))
-Overfull \hbox (129.28734pt too wide) in paragraph at lines 3--139
+Overfull \hbox (0.19289pt too wide) in paragraph at lines 3--139
 []
  []
 
@@ -887,18 +887,18 @@ Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 140.
 Here is how much of TeX's memory you used:
  12941 strings out of 493315
  203277 string characters out of 6137904
- 282840 words of memory out of 5000000
+ 283840 words of memory out of 5000000
  16133 multiletter control sequences out of 15000+600000
  28416 words of font info for 58 fonts, out of 8000000 for 9000
  957 hyphenation exceptions out of 8191
- 57i,7n,100p,672b,416s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 57i,8n,100p,672b,416s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/local/texlive/2013/texmf-dist/fonts/enc/dvips/libertine/lbtn_c7kyj5.enc
 }{/usr/local/texlive/2013/texmf-dist/fonts/enc/dvips/libertine/lbtn_lu7m2n.enc}
 {/usr/local/texlive/2013/texmf-dist/fonts/enc/dvips/libertine/lbtn_tltjc6.enc}<
 /usr/local/texlive/2013/texmf-dist/fonts/type1/public/libertine/LinLibertineT.p
 fb></usr/local/texlive/2013/texmf-dist/fonts/type1/public/libertine/LinLibertin
 eTB.pfb>
-Output written on proposal.pdf (3 pages, 282105 bytes).
+Output written on proposal.pdf (3 pages, 282743 bytes).
 PDF statistics:
  72 PDF objects out of 1000 (max. 8388607)
  63 compressed objects within 1 object stream

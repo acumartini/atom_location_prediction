@@ -12,7 +12,7 @@
 \noindent Figure 1 shows a block level diagram of the project data flow. There are three main components to the solution.
 \begin{description}
 \item[Simulation] 
-\item[Machine Learning] Tr
+\item[Machine Learning] Test multiple machine learning algorithms to find and optimize a strong predictive model.
 \item[Visualization]
 \end{description}
 
@@ -20,7 +20,7 @@
 %The core of the simulator is a basic physics simulation. This N-body simulation will track projectiles and vehicles within the world and apply basic Newtonian physics. The simulator will expose the current location of each simulated object at regular intervals as a list of 3D cartesian coordinates and object radii. This stream will be sent using the FOSA format. The simulator will also take in a stream of BDS actions and add projectiles to the simulation as appropriate. The simulator also enforces some sanity rules regarding object motion and provides some basic flight paths for UFOs.
 
 \subsection{Machine Learning}
-We will train and test multiple machine learning algorithms on the simulated images by splitting the training data into a training and validation set.  The validation set will be used to determine the best algorithm for this application and then to tune its parameters.
+We will train and test multiple machine learning algorithms on the simulated images by splitting the training data into a training and validation set.  The validation set will be used to determine the best algorithm for this application and then to tune its parameters.  The final classifier will be used to generate probabilistic predictions for the test set of actual CCD images.
  
 %AKWDS will take the FOSA stream of object locations and attempt to formulate some tracking of the objects (object A with location $L$ last time step is at location $L'$ this time step). This will be used to help estimate the future location of the object so that targets can be lead correctly for firing. AKWDS will then select a set of object to fire at and set of cannons to fire from and send the needed information via the BDS stream.
 
