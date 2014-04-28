@@ -1,4 +1,4 @@
-diffyq
+Predicting Atom Positions <br>Using Machine Learning Algorithms
 ===============
 
-A distributed parallel implementation of a differential equaltion solver.
+...
