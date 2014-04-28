@@ -1,0 +1,4 @@
+#default: testdata
+testdata: testdata.c
+	icpc -o $@ $^
+
