@@ -30,8 +30,8 @@ int main (int argc, char *argv[]) {
 	MPI_Get_processor_name(hostname, &len);
 
 	// msg test data
-    float *data; // an array of floats to store instance data
-    float *labels; // an array of float (to simplify vector math) labels
+    // float *data; // an array of floats to store instance data
+    // float *labels; // an array of float (to simplify vector math) labels
 	tag1 = 1, tag2 = 2, tag3 = 3, tag4 = 4, tag5 = 5;
 
 	/***** Master task only ******/
@@ -44,23 +44,23 @@ int main (int argc, char *argv[]) {
 		// TODO: partition vector into chunks and send each task its share
 		const long datasize = 16;
         const long numfeats = 4; // to be populated while loading dataset
-        data = new float[datasize * numfeats];
-        labels = new float[datasize];
+        float data[datasize * numfeats];
+        float labels [datasize];
         for ( long i=0; i<datasize; ++i ) {
             for ( long j=0; j<numfeats; ++j ) {
             	long index = (i * numfeats) + j;
-                data[index] = 0.0 + j;
+                data[index] = 10.0 + j;
             }
-            labels[i] = 0.0;
+            labels[i] = 1.0;
         }
 		
         long chunksize = datasize / numtasks;
 		offset = chunksize;
 		for (dest=1; dest<numtasks; dest++) {
-			MPI_Send(&offset, 1, MPI_LONG, dest, tag1, MPI_COMM_WORLD);
-			MPI_Send(&chunksize, 1, MPI_LONG, dest, tag2, MPI_COMM_WORLD);
-			MPI_Send(&numfeats, 1, MPI_LONG, dest, tag3, MPI_COMM_WORLD);
-			MPI_Send( &data[offset], chunksize, MPI_FLOAT, dest, tag4, MPI_COMM_WORLD );
+			MPI_Send( &offset, 1, MPI_LONG, dest, tag1, MPI_COMM_WORLD );
+			MPI_Send( &chunksize, 1, MPI_LONG, dest, tag2, MPI_COMM_WORLD );
+			MPI_Send( &numfeats, 1, MPI_LONG, dest, tag3, MPI_COMM_WORLD );
+			MPI_Send( &data[offset], chunksize * numfeats, MPI_FLOAT, dest, tag4, MPI_COMM_WORLD );
 			MPI_Send( &labels[offset], chunksize, MPI_FLOAT, dest, tag5, MPI_COMM_WORLD );
 			printf( "Sent %d elements to task %d offset= %d\n", chunksize, dest, offset );
 			offset += chunksize;
@@ -97,24 +97,25 @@ int main (int argc, char *argv[]) {
 		source = MASTER;
 		
 		// recieve data partition
-		MPI_Recv( &offset, 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status );
+		MPI_Recv( &offset, 1, MPI_LONG, source, tag1, MPI_COMM_WORLD, &status );
 		printf( "Task %d offset = %ld\n", taskid, offset );
-		MPI_Recv( &chunksize_msg, 1, MPI_INT, source, tag2, MPI_COMM_WORLD, &status );
+		MPI_Recv( &chunksize_msg, 1, MPI_LONG, source, tag2, MPI_COMM_WORLD, &status );
 		printf( "Task %d chunksize_msg = %ld\n", taskid, chunksize_msg );
-		MPI_Recv( &numfeats_msg, 1, MPI_INT, source, tag2, MPI_COMM_WORLD, &status );
+		MPI_Recv( &numfeats_msg, 1, MPI_LONG, source, tag3, MPI_COMM_WORLD, &status );
 		printf( "Task %d numfeats_msg = %ld\n", taskid, numfeats_msg );
         
         // initialize local data storage
         const long chunksize = chunksize_msg;
         const long numfeats = numfeats_msg;
-        data = new float[chunksize * numfeats];
-        labels = new float[chunksize];
+        float data[chunksize * numfeats];
+        float labels[chunksize];
 
         // receive data and labels
-		MPI_Recv( &data[offset], chunksize, MPI_FLOAT, source, tag3, MPI_COMM_WORLD, &status );
-        printf( "Task %d data[offset] = %f\n", taskid, data[offset] );
-		MPI_Recv( &labels[offset], chunksize, MPI_FLOAT, source, tag3, MPI_COMM_WORLD, &status );
-        printf( "Task %d data[offset] = %f\n", taskid, data[offset] );
+		MPI_Recv( &data, chunksize * numfeats, MPI_FLOAT, source, tag4, MPI_COMM_WORLD, &status );
+        printf( "Task %d data[0] = %f\n", taskid, data[0] );
+        printf( "Task %d data[chunksize * numfeats-1] = %f\n", taskid, data[chunksize*numfeats-1] );
+		MPI_Recv( &labels, chunksize, MPI_FLOAT, source, tag5, MPI_COMM_WORLD, &status );
+        printf( "Task %d labels[0] = %f\n", taskid, labels[0] );
 
         // convert data to Matrix objects (i.e., Eigen Matrices)
 
