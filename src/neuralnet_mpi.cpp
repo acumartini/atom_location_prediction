@@ -19,15 +19,19 @@ int main (int argc, char *argv[]) {
 	}
 
 	// initialize/populate mpi specific vars local to each node
-	int  numtasks, taskid, len;
+	int  numtasks, taskid, len, rc, dest, offset, tag1, tag2, source, chunksize; 
 	char hostname[MPI_MAX_PROCESSOR_NAME];
-	int  partner, message;
 	MPI_Status status;
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &numtasks);
 	MPI_Comm_rank(MPI_COMM_WORLD,&taskid);
 	MPI_Get_processor_name(hostname, &len);
+
+	// msg test data
+	float data[4]
+	tag1 = 1, tag2 = 2;
+	chunksize = 1;
 
 	/***** Master task only ******/
 
@@ -37,10 +41,12 @@ int main (int argc, char *argv[]) {
 		printf( "Data preprocessing from MASTER task %d on %s!\n", taskid, hostname );
 		// partition data
 		// TODO: partition vector into chunks and send each task its share
-		float data[4] = { 1.0, 2.0, 3.0, 4.0 };
-		int dest, offset = 1, chunksize = 1;
+		data = { 1.0, 2.0, 3.0, 4.0 };
+
+		offset = chunksize;
 		for (dest=1; dest<numtasks; dest++) {
-			MPI_Send( &data[offset], chunksize, MPI_FLOAT, dest, 0, MPI_COMM_WORLD );
+			MPI_Send(&offset, 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
+			MPI_Send( &data[offset], chunksize, MPI_FLOAT, dest, tag2, MPI_COMM_WORLD );
 			printf( "Sent %d elements to task %d offset= %d\n", chunksize, dest, offset );
 			offset += chunksize;
 		}
@@ -57,6 +63,7 @@ int main (int argc, char *argv[]) {
 		// set MASTER NN parameters
 
 		// optimize
+		offset = 0;
 
 		// predict on validation set
 
@@ -69,7 +76,12 @@ int main (int argc, char *argv[]) {
 
 	if (taskid > MASTER) {
 		printf ("Hello from task %d on %s!\n", taskid, hostname);
+		source = MASTER;
+		
 		// recieve data partition
+		MPI_Recv(&offset, 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
+		MPI_Recv(&data[offset], chunksize, MPI_FLOAT, source, tag2, MPI_COMM_WORLD, &status);
+
 
 		// recieve network structure and processing paramters info
 
