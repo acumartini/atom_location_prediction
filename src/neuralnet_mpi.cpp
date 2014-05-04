@@ -45,7 +45,7 @@ int main (int argc, char *argv[]) {
 		const long datasize = 16;
         const long numfeats = 4; // to be populated while loading dataset
         float data[datasize * numfeats];
-        float labels [datasize];
+        float labels[datasize];
         for ( long i=0; i<datasize; ++i ) {
             for ( long j=0; j<numfeats; ++j ) {
             	long index = (i * numfeats) + j;
@@ -62,7 +62,7 @@ int main (int argc, char *argv[]) {
 			MPI_Send( &numfeats, 1, MPI_LONG, dest, tag3, MPI_COMM_WORLD );
 			MPI_Send( &data[offset], chunksize * numfeats, MPI_FLOAT, dest, tag4, MPI_COMM_WORLD );
 			MPI_Send( &labels[offset], chunksize, MPI_FLOAT, dest, tag5, MPI_COMM_WORLD );
-			printf( "Sent %d elements to task %d offset= %d\n", chunksize, dest, offset );
+			printf( "Sent %ld elements to task %d offset= %ld\n", chunksize, dest, offset );
 			offset += chunksize;
 		}
 
