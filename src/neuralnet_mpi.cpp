@@ -1,9 +1,13 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
 #include <limits.h>
+#include "Eigen/Core"
 
 #define  MASTER		0
+
+using namespace Eigen;
 
 int main (int argc, char *argv[]) {
 	// handle cmd args
@@ -19,7 +23,7 @@ int main (int argc, char *argv[]) {
 	}
 
 	// initialize/populate mpi specific vars local to each node
-	int  numtasks, taskid, len, dest, source, tag1, tag2, tag3, tag4, tag5; 
+	int  numtasks, taskid, len, dest, source, tag1, tag2, tag3, tag4, tag5, tag6; 
     long offset;
 	char hostname[MPI_MAX_PROCESSOR_NAME];
 	MPI_Status status;
@@ -32,7 +36,7 @@ int main (int argc, char *argv[]) {
 	// msg test data
     // float *data; // an array of floats to store instance data
     // float *labels; // an array of float (to simplify vector math) labels
-	tag1 = 1, tag2 = 2, tag3 = 3, tag4 = 4, tag5 = 5;
+	tag1 = 1, tag2 = 2, tag3 = 3, tag4 = 4, tag5 = 5, tag6 = 6;
 
 	/***** Master task only ******/
 
@@ -44,14 +48,15 @@ int main (int argc, char *argv[]) {
 		// TODO: partition vector into chunks and send each task its share
 		const long datasize = 16;
         const long numfeats = 4; // to be populated while loading dataset
+        const long numlabels = 1; // for testing binary classification only
         float data[datasize * numfeats];
-        float labels[datasize];
+        float labels[datasize * numlabels];
         for ( long i=0; i<datasize; ++i ) {
             for ( long j=0; j<numfeats; ++j ) {
             	long index = (i * numfeats) + j;
                 data[index] = 10.0 + j;
             }
-            labels[i] = 1.0;
+            labels[i] = 1.0; // TODO: more complex label population
         }
 		
         long chunksize = datasize / numtasks;
@@ -60,8 +65,9 @@ int main (int argc, char *argv[]) {
 			MPI_Send( &offset, 1, MPI_LONG, dest, tag1, MPI_COMM_WORLD );
 			MPI_Send( &chunksize, 1, MPI_LONG, dest, tag2, MPI_COMM_WORLD );
 			MPI_Send( &numfeats, 1, MPI_LONG, dest, tag3, MPI_COMM_WORLD );
-			MPI_Send( &data[offset], chunksize * numfeats, MPI_FLOAT, dest, tag4, MPI_COMM_WORLD );
-			MPI_Send( &labels[offset], chunksize, MPI_FLOAT, dest, tag5, MPI_COMM_WORLD );
+			MPI_Send( &numlabels, 1, MPI_LONG, dest, tag4, MPI_COMM_WORLD );
+			MPI_Send( &data[offset], chunksize * numfeats, MPI_FLOAT, dest, tag5, MPI_COMM_WORLD );
+			MPI_Send( &labels[offset], chunksize, MPI_FLOAT, dest, tag6, MPI_COMM_WORLD );
 			printf( "Sent %ld elements to task %d offset= %ld\n", chunksize, dest, offset );
 			offset += chunksize;
 		}
@@ -91,7 +97,7 @@ int main (int argc, char *argv[]) {
 
 	if (taskid > MASTER) {
 		// variables for temporary message storage
-		long chunksize_msg, numfeats_msg;
+		long chunksize_msg, numfeats_msg, numlabels_msg;
 
 		printf ("Hello from task %d on %s!\n", taskid, hostname);
 		source = MASTER;
@@ -103,21 +109,42 @@ int main (int argc, char *argv[]) {
 		printf( "Task %d chunksize_msg = %ld\n", taskid, chunksize_msg );
 		MPI_Recv( &numfeats_msg, 1, MPI_LONG, source, tag3, MPI_COMM_WORLD, &status );
 		printf( "Task %d numfeats_msg = %ld\n", taskid, numfeats_msg );
+		MPI_Recv( &numlabels_msg, 1, MPI_LONG, source, tag4, MPI_COMM_WORLD, &status );
+		printf( "Task %d numlabels_msg = %ld\n", taskid, numlabels_msg );
         
         // initialize local data storage
         const long chunksize = chunksize_msg;
         const long numfeats = numfeats_msg;
+        const long numlabels = numlabels_msg;
         float data[chunksize * numfeats];
-        float labels[chunksize];
+        float labels[chunksize * numlabels];
 
         // receive data and labels
-		MPI_Recv( &data, chunksize * numfeats, MPI_FLOAT, source, tag4, MPI_COMM_WORLD, &status );
+		MPI_Recv( &data, chunksize * numfeats, MPI_FLOAT, source, tag5, MPI_COMM_WORLD, &status );
         printf( "Task %d data[0] = %f\n", taskid, data[0] );
         printf( "Task %d data[chunksize * numfeats-1] = %f\n", taskid, data[chunksize*numfeats-1] );
-		MPI_Recv( &labels, chunksize, MPI_FLOAT, source, tag5, MPI_COMM_WORLD, &status );
+		MPI_Recv( &labels, chunksize, MPI_FLOAT, source, tag6, MPI_COMM_WORLD, &status );
         printf( "Task %d labels[0] = %f\n", taskid, labels[0] );
 
         // convert data to Matrix objects (i.e., Eigen Matrices)
+        MatrixXf X = MatrixXf::Zero(chunksize, numfeats);
+        for ( int i=0; i<chunksize; ++i ) {
+            for ( int j=0; j<numfeats; ++j ) {
+                X(i,j) = data[(i*numfeats) + j];
+            }
+        }
+        MatrixXf y = MatrixXf::Zero(chunksize, numlabels);
+        for ( int i=0; i<chunksize; ++i ) {
+            for ( int j=0; j<numlabels; ++j ) {
+                y(i,j) = labels[(i*numlabels) + j];
+            }
+        }
+
+        std::cout << "X:\n" << X << std::endl;
+        std::cout << "y:\n" << y << std::endl;
+        std::cout << "X * y:\n" << X * y << std::endl;
+        
+        
 
 		// recieve network structure and processing paramters info
 
