@@ -66,11 +66,15 @@ int main (int argc, char *argv[]) {
 			MPI_Send( &chunksize, 1, MPI_LONG, dest, tag2, MPI_COMM_WORLD );
 			MPI_Send( &numfeats, 1, MPI_LONG, dest, tag3, MPI_COMM_WORLD );
 			MPI_Send( &numlabels, 1, MPI_LONG, dest, tag4, MPI_COMM_WORLD );
+			MPI_Barrier(MPI_COMM_WORLD);
 			MPI_Send( &data[offset], chunksize * numfeats, MPI_FLOAT, dest, tag5, MPI_COMM_WORLD );
 			MPI_Send( &labels[offset], chunksize, MPI_FLOAT, dest, tag6, MPI_COMM_WORLD );
 			printf( "Sent %ld elements to task %d offset= %ld\n", chunksize, dest, offset );
+			MPI_Barrier(MPI_COMM_WORLD);
 			offset += chunksize;
 		}
+		MPI_Barrier(MPI_COMM_WORLD);
+
 
 		// pass network structure and processing parameters message
 
