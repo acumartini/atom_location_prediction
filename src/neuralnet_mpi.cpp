@@ -10,7 +10,7 @@
 using namespace Eigen;
 
 int main (int argc, char *argv[]) {
-	// handle cmd args
+    // handle cmd args
 	// TODO: add <hidden_layer_sizes> (i.e., "100-100-50") argument processing
 	int batch_size;
 	if ( argc > 1 ) {
