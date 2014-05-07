@@ -35,7 +35,7 @@ int main (int argc, char *argv[]) {
 	MPI_Get_processor_name(hostname, &len);
 
 
-	/***** Master task only ******/
+	/***** MASTER TASK ONLY ******/
 
 	// perform data preprocessing based on number of workers and batch_size
 	if (taskid == MASTER) {
@@ -43,7 +43,6 @@ int main (int argc, char *argv[]) {
 
 		/* DATA PREPROCESSING */
 
-		printf( "Data preprocessing from MASTER task %d on %s!\n", taskid, hostname );
 		// Load dataset
         // TEMP: populate fictitious dataset
         // NOTE: record max and min for each column in the max/min arrays
@@ -88,13 +87,12 @@ int main (int argc, char *argv[]) {
         MatrixXf y = MatrixXf( numlabels, chunksize );
         memcpy( X.data(), data.data(), chunksize * numfeats * sizeof(float) ); 
         memcpy( y.data(), labels.data(), chunksize * numlabels *  sizeof(float) );
-        std::cout << "MASTER X\n" << X << std::endl;
-        std::cout << "MASTER y\n" << y << std::endl;
+        std::cout << "MASTER X:\n" << X << std::endl;
+        std::cout << "MASTER y:\n" << y << std::endl;
         
         // send data to workers
 		offset = chunksize;
 		for (dest=1; dest<numtasks; dest++) {
-			MPI_Send( &offset, 1, MPI_LONG, dest, TAG_0, MPI_COMM_WORLD );
 			MPI_Send( &chunksize, 1, MPI_LONG, dest, TAG_0, MPI_COMM_WORLD );
 			MPI_Send( &numfeats, 1, MPI_LONG, dest, TAG_0, MPI_COMM_WORLD );
 			MPI_Send( &numlabels, 1, MPI_LONG, dest, TAG_0, MPI_COMM_WORLD );
@@ -137,7 +135,7 @@ int main (int argc, char *argv[]) {
 		// store parameters
 	} 
 
-	/***** Non-master tasks only *****/
+	/***** NON-MASTER TASKS ONLY *****/
 
 	if (taskid > MASTER) {
 		printf ("Hello from task %d on %s!\n", taskid, hostname);
@@ -148,13 +146,11 @@ int main (int argc, char *argv[]) {
 		source = MASTER;
 		
 		// recieve data partition
-		MPI_Recv( &offset, 1, MPI_LONG, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-		printf( "Task %d offset = %ld\n", taskid, offset );
 		MPI_Recv( &chunksize, 1, MPI_LONG, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-		printf( "Task %d chunksize = %ld\n", taskid, chunksize );
 		MPI_Recv( &numfeats, 1, MPI_LONG, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-		printf( "Task %d numfeats = %ld\n", taskid, numfeats );
 		MPI_Recv( &numlabels, 1, MPI_LONG, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+		printf( "Task %d chunksize = %ld\n", taskid, chunksize );
+		printf( "Task %d numfeats = %ld\n", taskid, numfeats );
 		printf( "Task %d numlabels = %ld\n", taskid, numlabels );
         
         // initialize local data storage
@@ -163,9 +159,9 @@ int main (int argc, char *argv[]) {
 
         // receive data and labels
 		MPI_Recv( X.data(), chunksize * numfeats, MPI_FLOAT, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-		std::cout << "X:\n" << X << std::endl;
 		MPI_Recv( y.data(), chunksize * numlabels, MPI_FLOAT, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-        std::cout << "y:\n" << y << std::endl;
+		std::cout << "task " << taskid << " X:\n" << X << std::endl;
+        std::cout << "task " << taskid << " y:\n" << y << std::endl;
         
         
         /* CLASSIFICATION MODEL INITIALIZATION */
