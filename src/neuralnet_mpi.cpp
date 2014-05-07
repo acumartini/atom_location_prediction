@@ -49,7 +49,7 @@ int main (int argc, char *argv[]) {
 		const long datasize = 16;
         const long numfeats = 4; // to be populated while loading dataset
         const long numlabels = 1; // for testing binary classification only
-        MatrixXf data = MatrixXf::Zero( datasize, numfeats );
+        MatrixXf data = MatrixXf::Zero( numfeats, datasize );
         float min[numfeats]; // stores the overall min for each column
         float max[numfeats]; // stores the overall max for each column
         float labels[datasize * numlabels];
@@ -60,7 +60,7 @@ int main (int argc, char *argv[]) {
         for ( long i=0; i<datasize; ++i ) {
             for ( long j=0; j<numfeats; ++j ) {
             	long index = (i * numfeats) + j;
-                data(i, j) = 10.0 + j;
+                data(j, i) = i + j;
             }
             labels[i] = 1.0;
         }
@@ -83,7 +83,7 @@ int main (int argc, char *argv[]) {
 			MPI_Send( &chunksize, 1, MPI_LONG, dest, TAG_0, MPI_COMM_WORLD );
 			MPI_Send( &numfeats, 1, MPI_LONG, dest, TAG_0, MPI_COMM_WORLD );
 			MPI_Send( &numlabels, 1, MPI_LONG, dest, TAG_0, MPI_COMM_WORLD );
-			MPI_Send( data.data()[offset], chunksize * numfeats, MPI_FLOAT, dest, TAG_0, MPI_COMM_WORLD );
+			MPI_Send( data.data() + offset, chunksize * numfeats, MPI_FLOAT, dest, TAG_0, MPI_COMM_WORLD );
 			MPI_Send( &labels[offset], chunksize, MPI_FLOAT, dest, TAG_0, MPI_COMM_WORLD );
 			printf( "Sent %ld elements to task %d offset= %ld\n", chunksize, dest, offset );
 			offset += chunksize;
@@ -150,7 +150,7 @@ int main (int argc, char *argv[]) {
         const long chunksize = chunksize_msg;
         const long numfeats = numfeats_msg;
         const long numlabels = numlabels_msg;
-        MatrixXf data = MatrixXf::Zero( chunksize, numfeats );
+        MatrixXf data = MatrixXf::Zero( numfeats, chunksize );
         float labels[chunksize * numlabels];
 
         // receive data and labels
@@ -160,7 +160,8 @@ int main (int argc, char *argv[]) {
 		std::cout << "data:\n" << data << std::endl;
 		MPI_Recv( &labels, chunksize, MPI_FLOAT, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
         printf( "Task %d labels[0] = %f\n", taskid, labels[0] );
-
+        
+        /*
         // convert data to Matrix objects (i.e., Eigen Matrices)
         MatrixXf X = MatrixXf::Zero(chunksize, numfeats);
         for ( int i=0; i<chunksize; ++i ) {
@@ -178,9 +179,9 @@ int main (int argc, char *argv[]) {
         std::cout << "X:\n" << X << std::endl;
         std::cout << "y:\n" << y << std::endl;
         std::cout << "X * y:\n" << X * y << std::endl;
-        
+        */
         if (taskid == 1) {
-            X = MatrixXf::Zero(2, 2);
+            MatrixXf X = MatrixXf::Zero(2, 2);
             MPI_Recv( X.data(), X.size(), MPI_FLOAT, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
 
             std::cout << "Eigen from MASTER:\n" << X << std::endl;
