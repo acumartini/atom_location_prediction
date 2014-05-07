@@ -93,6 +93,9 @@ int main (int argc, char *argv[]) {
 			offset += chunksize;
 		}
 
+		MatrixXf X = MatrixXf::Zero(2, 2);
+		MPI_send( X.data(), X.size(), MPI_FLOAT, 1, TAG_0, MPI_COMM_WORLD );
+
 
 		/* CLASSIFICATION MODEL INITIALIZATION *
 
@@ -178,6 +181,11 @@ int main (int argc, char *argv[]) {
         std::cout << "X:\n" << X << std::endl;
         std::cout << "y:\n" << y << std::endl;
         std::cout << "X * y:\n" << X * y << std::endl;
+
+        MatrixXf X = MatrixXf::Zero(2, 2);
+        MPI_Recv( X.data(), X.size(), MPI_FLOAT, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+
+        std::cout << "Eigen from MASTER: " << X << std::endl;
         
         
         /* CLASSIFICATION MODEL INITIALIZATION */
