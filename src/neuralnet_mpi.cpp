@@ -44,19 +44,18 @@ int main (int argc, char *argv[]) {
 		/* DATA PREPROCESSING */
 
 		printf( "Data preprocessing from MASTER task %d on %s!\n", taskid, hostname );
-		// partition data
-		// TODO: partition vector into chunks and send each task its share
+		// Load dataset
+        // TEMP: populate fictitious dataset
+        // NOTE: record max and min for each column in the max/min arrays
 		const long datasize = 16;
         const long numfeats = 4; // to be populated while loading dataset
         const long numlabels = 1; // for testing binary classification only
+        
         MatrixXf data = MatrixXf( numfeats, datasize ); // column-major order!
         float min[numfeats]; // stores the overall min for each column
         float max[numfeats]; // stores the overall max for each column
         VectorXf labels_vec = VectorXf( datasize );
-
-        // Load data and labels into arrays from file
-        // TEMP: populate fictitious dataset
-        // NOTE: record max and min for each column in the max/min arrays
+        
         for ( long i=0; i<datasize; ++i ) {
             for ( long j=0; j<numfeats; ++j ) {
                 data(j, i) = i + j;
