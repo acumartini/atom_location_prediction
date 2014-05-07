@@ -6,7 +6,7 @@
 #include "Eigen/Core"
 
 #define  MASTER		0
-#define  TAG_0       0
+#define  TAG_0      0
 
 using namespace Eigen;
 
@@ -52,20 +52,26 @@ int main (int argc, char *argv[]) {
         MatrixXf data = MatrixXf( numfeats, datasize ); // column-major order!
         float min[numfeats]; // stores the overall min for each column
         float max[numfeats]; // stores the overall max for each column
-        MatrixXf labels = MatrixXf( numlabels, datasize );
+        VectorXf labels_vec = VectorXf( datasize );
 
         // Load data and labels into arrays from file
         // TEMP: populate fictitious dataset
         // NOTE: record max and min for each column in the max/min arrays
         for ( long i=0; i<datasize; ++i ) {
             for ( long j=0; j<numfeats; ++j ) {
-            	long index = (i * numfeats) + j;
                 data(j, i) = i + j;
             }
-            labels(0,i) = 1.0; // populate a column vector with 1's for testing
+            labels_vec[i] = 1.0; // populate a column vector with 1's for testing
         }
 
-        // Shuffle data to randomize instances
+        // Shuffle data/labels to randomize instances
+        
+        // Reformat labels for multi-class classification
+        MatrixXf labels = MatrixXf::Zero( numlabels, datasize );
+        // TODO: create class_map from unique classes with k:v = <true_label>:<column_index> 
+        for ( long i=0; i<datasize; ++i ) {
+            // labels( class_map[y_vec[i]], i ) = 1.0;
+        }
 
         // Scale features
         // TODO: use max/min arrays to scale data to between -1 and 1
@@ -77,6 +83,16 @@ int main (int argc, char *argv[]) {
         /* DATA MARSHALLING */
 
         long chunksize = datasize / numtasks;
+        
+        // load MASTER data
+        MatrixXf X = MatrixXf( numfeats, chunksize );
+        MatrixXf y = MatrixXf( numlabels, chunksize );
+        memcpy( X.data(), data.data(), chunksize * numfeats * sizeof(float) ); 
+        memcpy( y.data(), labels.data(), chunksize * numlabels *  sizeof(float) );
+        std::cout << "MASTER X\n" << X << std::endl;
+        std::cout << "MASTER y\n" << y << std::endl;
+        
+        // send data to workers
 		offset = chunksize;
 		for (dest=1; dest<numtasks; dest++) {
 			MPI_Send( &offset, 1, MPI_LONG, dest, TAG_0, MPI_COMM_WORLD );
@@ -84,13 +100,10 @@ int main (int argc, char *argv[]) {
 			MPI_Send( &numfeats, 1, MPI_LONG, dest, TAG_0, MPI_COMM_WORLD );
 			MPI_Send( &numlabels, 1, MPI_LONG, dest, TAG_0, MPI_COMM_WORLD );
 			MPI_Send( data.data() + offset, chunksize * numfeats, MPI_FLOAT, dest, TAG_0, MPI_COMM_WORLD );
-			MPI_Send( &labels[offset], chunksize, MPI_FLOAT, dest, TAG_0, MPI_COMM_WORLD );
+			MPI_Send( labels.data() + offset, chunksize, MPI_FLOAT, dest, TAG_0, MPI_COMM_WORLD );
 			printf( "Sent %ld elements to task %d offset= %ld\n", chunksize, dest, offset );
 			offset += chunksize;
 		}
-
-	    MatrixXf X = MatrixXf::Zero(2, 2);
-		MPI_Send( X.data(), X.size(), MPI_FLOAT, 1, TAG_0, MPI_COMM_WORLD );
 
 
 		/* CLASSIFICATION MODEL INITIALIZATION *
@@ -132,42 +145,29 @@ int main (int argc, char *argv[]) {
 
 		/* DATA INITIALIZATION */
 
-		// variables for temporary message storage
-		long chunksize_msg, numfeats_msg, numlabels_msg;
+		long chunksize, numfeats, numlabels;
 		source = MASTER;
 		
 		// recieve data partition
 		MPI_Recv( &offset, 1, MPI_LONG, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
 		printf( "Task %d offset = %ld\n", taskid, offset );
-		MPI_Recv( &chunksize_msg, 1, MPI_LONG, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-		printf( "Task %d chunksize_msg = %ld\n", taskid, chunksize_msg );
-		MPI_Recv( &numfeats_msg, 1, MPI_LONG, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-		printf( "Task %d numfeats_msg = %ld\n", taskid, numfeats_msg );
-		MPI_Recv( &numlabels_msg, 1, MPI_LONG, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-		printf( "Task %d numlabels_msg = %ld\n", taskid, numlabels_msg );
+		MPI_Recv( &chunksize, 1, MPI_LONG, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+		printf( "Task %d chunksize = %ld\n", taskid, chunksize );
+		MPI_Recv( &numfeats, 1, MPI_LONG, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+		printf( "Task %d numfeats = %ld\n", taskid, numfeats );
+		MPI_Recv( &numlabels, 1, MPI_LONG, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+		printf( "Task %d numlabels = %ld\n", taskid, numlabels );
         
         // initialize local data storage
-        const long chunksize = chunksize_msg;
-        const long numfeats = numfeats_msg;
-        const long numlabels = numlabels_msg;
-        MatrixXf data = MatrixXf( numfeats, chunksize );
-        MatrixXf labels = MatrixXf( numlabels, chunksize );
+        MatrixXf X = MatrixXf( numfeats, chunksize );
+        MatrixXf y = MatrixXf( numlabels, chunksize );
 
         // receive data and labels
-		MPI_Recv( data.data(), chunksize * numfeats, MPI_FLOAT, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-        //printf( "Task %d data[0] = %f\n", taskid, data[0] );
-        //printf( "Task %d data[chunksize * numfeats-1] = %f\n", taskid, data[chunksize*numfeats-1] );
-		std::cout << "data:\n" << data << std::endl;
-		MPI_Recv( labels.data(), chunksize * numlabels, MPI_FLOAT, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-        std::cout << "labels:\n" << labels << std::endl;
-        //printf( "Task %d labels[0] = %f\n", taskid, labels[0] );
+		MPI_Recv( X.data(), chunksize * numfeats, MPI_FLOAT, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+		std::cout << "X:\n" << X << std::endl;
+		MPI_Recv( y.data(), chunksize * numlabels, MPI_FLOAT, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+        std::cout << "y:\n" << y << std::endl;
         
-        if (taskid == 1) {
-            MatrixXf X = MatrixXf::Zero(2, 2);
-            MPI_Recv( X.data(), X.size(), MPI_FLOAT, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-
-            std::cout << "Eigen from MASTER:\n" << X << std::endl;
-        } 
         
         /* CLASSIFICATION MODEL INITIALIZATION */
 
