@@ -6,7 +6,7 @@
 #include "Eigen/Core"
 
 #define  MASTER		0
-#define  TAG0       0
+#define  TAG_0       0
 
 using namespace Eigen;
 
@@ -24,7 +24,7 @@ int main (int argc, char *argv[]) {
 	}
 
 	// initialize/populate mpi specific vars local to each node
-	int  numtasks, taskid, len, dest, source; //, tag1, tag2, tag3, tag4, tag5, tag6; 
+	int  numtasks, taskid, len, dest, source;
     long offset;
 	char hostname[MPI_MAX_PROCESSOR_NAME];
 	MPI_Status status;
@@ -34,10 +34,6 @@ int main (int argc, char *argv[]) {
 	MPI_Comm_rank(MPI_COMM_WORLD,&taskid);
 	MPI_Get_processor_name(hostname, &len);
 
-	// msg test data
-    // float *data; // an array of floats to store instance data
-    // float *labels; // an array of float (to simplify vector math) labels
-	//tag1 = 1, tag2 = 2, tag3 = 3, tag4 = 4, tag5 = 5, tag6 = 6;
 
 	/***** Master task only ******/
 
