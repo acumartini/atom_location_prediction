@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <iostream>
 #include <limits.h>
+
+#define EIGEN_DEFAULT_TO_ROW_MAJOR
 #include "Eigen/Core"
 
 #define  MASTER		0
@@ -25,7 +27,6 @@ int main (int argc, char *argv[]) {
 
 	// initialize/populate mpi specific vars local to each node
 	int  numtasks, taskid, len, dest, source;
-    long offset;
 	char hostname[MPI_MAX_PROCESSOR_NAME];
 	MPI_Status status;
 
@@ -50,22 +51,25 @@ int main (int argc, char *argv[]) {
         const long numfeats = 4; // to be populated while loading dataset
         const long numlabels = 1; // for testing binary classification only
         
-        MatrixXf data = MatrixXf( numfeats, datasize ); // column-major order!
+        MatrixXf data = MatrixXf( datasize, numfeats ); // row-major order!
         float min[numfeats]; // stores the overall min for each column
         float max[numfeats]; // stores the overall max for each column
         VectorXf labels_vec = VectorXf( datasize );
         
         for ( long i=0; i<datasize; ++i ) {
             for ( long j=0; j<numfeats; ++j ) {
-                data(j, i) = i + j;
+                data(i, j) = i + j;
             }
-            labels_vec[i] = 1.0; // populate a column vector with 1's for testing
+            labels_vec[i] = 1.0; // populate a vector with labels for each instance
         }
+        data(0,0) = 100.1;
+        data(1,0) = 200.1;
+        data(0,1) = 300.1;
 
         // Shuffle data/labels to randomize instances
         
         // Reformat labels for multi-class classification
-        MatrixXf labels = MatrixXf::Zero( numlabels, datasize );
+        MatrixXf labels = MatrixXf::Zero( datasize, numlabels );
         // TODO: create class_map from unique classes with k:v = <true_label>:<column_index> 
         for ( long i=0; i<datasize; ++i ) {
             // labels( class_map[y_vec[i]], i ) = 1.0;
@@ -83,27 +87,27 @@ int main (int argc, char *argv[]) {
         long chunksize = datasize / numtasks;
         
         // load MASTER data
-        MatrixXf X = MatrixXf( numfeats, chunksize );
-        MatrixXf y = MatrixXf( numlabels, chunksize );
+        MatrixXf X = MatrixXf( chunksize, numfeats );
+        MatrixXf y = MatrixXf( chunksize, numlabels );
         memcpy( X.data(), data.data(), chunksize * numfeats * sizeof(float) ); 
         memcpy( y.data(), labels.data(), chunksize * numlabels *  sizeof(float) );
         std::cout << "MASTER X:\n" << X << std::endl;
         std::cout << "MASTER y:\n" << y << std::endl;
         
         // send data to workers
-		offset = chunksize;
+        long offset = chunksize;
 		for (dest=1; dest<numtasks; dest++) {
 			MPI_Send( &chunksize, 1, MPI_LONG, dest, TAG_0, MPI_COMM_WORLD );
 			MPI_Send( &numfeats, 1, MPI_LONG, dest, TAG_0, MPI_COMM_WORLD );
 			MPI_Send( &numlabels, 1, MPI_LONG, dest, TAG_0, MPI_COMM_WORLD );
-			MPI_Send( data.data() + offset, chunksize * numfeats, MPI_FLOAT, dest, TAG_0, MPI_COMM_WORLD );
-			MPI_Send( labels.data() + offset, chunksize, MPI_FLOAT, dest, TAG_0, MPI_COMM_WORLD );
-			printf( "Sent %ld elements to task %d offset= %ld\n", chunksize, dest, offset );
+			MPI_Send( data.data() + offset * numfeats, chunksize * numfeats, MPI_FLOAT, dest, TAG_0, MPI_COMM_WORLD );
+			MPI_Send( labels.data() + offset * numlabels, chunksize * numlabels, MPI_FLOAT, dest, TAG_0, MPI_COMM_WORLD );
+			printf( "Sent %ld instances to task %d offset= %ld\n", chunksize, dest, offset );
 			offset += chunksize;
 		}
 
 
-		/* CLASSIFICATION MODEL INITIALIZATION *
+		/* CLASSIFICATION MODEL INITIALIZATION */
 
 		// pass network structure and processing parameters message
 
@@ -154,8 +158,8 @@ int main (int argc, char *argv[]) {
 		printf( "Task %d numlabels = %ld\n", taskid, numlabels );
         
         // initialize local data storage
-        MatrixXf X = MatrixXf( numfeats, chunksize );
-        MatrixXf y = MatrixXf( numlabels, chunksize );
+        MatrixXf X = MatrixXf( chunksize, numfeats );
+        MatrixXf y = MatrixXf( chunksize, numlabels );
 
         // receive data and labels
 		MPI_Recv( X.data(), chunksize * numfeats, MPI_FLOAT, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
