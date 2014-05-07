@@ -49,7 +49,7 @@ int main (int argc, char *argv[]) {
 		const long datasize = 16;
         const long numfeats = 4; // to be populated while loading dataset
         const long numlabels = 1; // for testing binary classification only
-        float data[datasize * numfeats];
+        MatrixXf data = MatrixXf::Zero( datasize, numfeats );
         float min[numfeats]; // stores the overall min for each column
         float max[numfeats]; // stores the overall max for each column
         float labels[datasize * numlabels];
@@ -60,7 +60,7 @@ int main (int argc, char *argv[]) {
         for ( long i=0; i<datasize; ++i ) {
             for ( long j=0; j<numfeats; ++j ) {
             	long index = (i * numfeats) + j;
-                data[index] = 10.0 + j;
+                data(i, j) = 10.0 + j;
             }
             labels[i] = 1.0;
         }
@@ -83,7 +83,7 @@ int main (int argc, char *argv[]) {
 			MPI_Send( &chunksize, 1, MPI_LONG, dest, TAG_0, MPI_COMM_WORLD );
 			MPI_Send( &numfeats, 1, MPI_LONG, dest, TAG_0, MPI_COMM_WORLD );
 			MPI_Send( &numlabels, 1, MPI_LONG, dest, TAG_0, MPI_COMM_WORLD );
-			MPI_Send( &data[offset], chunksize * numfeats, MPI_FLOAT, dest, TAG_0, MPI_COMM_WORLD );
+			MPI_Send( data.data()[offset], chunksize * numfeats, MPI_FLOAT, dest, TAG_0, MPI_COMM_WORLD );
 			MPI_Send( &labels[offset], chunksize, MPI_FLOAT, dest, TAG_0, MPI_COMM_WORLD );
 			printf( "Sent %ld elements to task %d offset= %ld\n", chunksize, dest, offset );
 			offset += chunksize;
@@ -150,13 +150,14 @@ int main (int argc, char *argv[]) {
         const long chunksize = chunksize_msg;
         const long numfeats = numfeats_msg;
         const long numlabels = numlabels_msg;
-        float data[chunksize * numfeats];
+        MatrixXf data = MatrixXf::Zero( chunksize, numfeats );
         float labels[chunksize * numlabels];
 
         // receive data and labels
-		MPI_Recv( &data, chunksize * numfeats, MPI_FLOAT, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-        printf( "Task %d data[0] = %f\n", taskid, data[0] );
-        printf( "Task %d data[chunksize * numfeats-1] = %f\n", taskid, data[chunksize*numfeats-1] );
+		MPI_Recv( data.data(), chunksize * numfeats, MPI_FLOAT, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+        //printf( "Task %d data[0] = %f\n", taskid, data[0] );
+        //printf( "Task %d data[chunksize * numfeats-1] = %f\n", taskid, data[chunksize*numfeats-1] );
+		std::cout << "data:\n" << data << std::endl;
 		MPI_Recv( &labels, chunksize, MPI_FLOAT, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
         printf( "Task %d labels[0] = %f\n", taskid, labels[0] );
 
