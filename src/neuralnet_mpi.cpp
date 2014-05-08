@@ -47,13 +47,13 @@ int main (int argc, char *argv[]) {
 		// Load dataset
         // TEMP: populate fictitious dataset
         // NOTE: record max and min for each column in the max/min arrays
-		const long datasize = 16;
-        const long numfeats = 4; // to be populated while loading dataset
-        const long numlabels = 1; // for testing binary classification only
+		long datasize = 16;
+        long numfeats = 4; // to be populated while loading dataset
+        long numlabels = 1; // for testing binary classification only
         
+        //float min[numfeats]; // stores the overall min for each column
+        //float max[numfeats]; // stores the overall max for each column
         MatrixXf data = MatrixXf( datasize, numfeats ); // row-major order!
-        float min[numfeats]; // stores the overall min for each column
-        float max[numfeats]; // stores the overall max for each column
         VectorXf labels_vec = VectorXf( datasize );
         
         for ( long i=0; i<datasize; ++i ) {
@@ -72,7 +72,7 @@ int main (int argc, char *argv[]) {
         MatrixXf labels = MatrixXf::Zero( datasize, numlabels );
         // TODO: create class_map from unique classes with k:v = <true_label>:<column_index> 
         for ( long i=0; i<datasize; ++i ) {
-            // labels( class_map[y_vec[i]], i ) = 1.0;
+            // labels( i, class_map[y_vec[i]] ) = 1.0;
         }
 
         // Scale features
