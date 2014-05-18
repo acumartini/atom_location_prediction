@@ -6,11 +6,13 @@
 
 #define EIGEN_DEFAULT_TO_ROW_MAJOR
 #include "Eigen/Core"
+// USING_PART_OF_NAMESPACE_EIGEN
 
 #define  MASTER		0
 #define  TAG_0      0
 
 using namespace Eigen;
+
 
 int main (int argc, char *argv[]) {
     // handle cmd args
