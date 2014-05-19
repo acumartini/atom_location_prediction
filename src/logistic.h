@@ -15,8 +15,26 @@
 typedef unsigned int LayerSize;
 typedef Eigen::MatrixXd Mat;
 typedef Eigen::Map<Mat> MatMap;
-typedef Eigen::VectorXd Vec;
+typedef Eigen::RowVectorXd Vec;
 typedef Eigen::Map<Vec> VecMap;
+typedef Eigen::MatrixXf::Index PredMat;
+
+
+/* ERROR HANDLING */
+#define NOT_UPDATED 0
+
+class LogisticRegressionError: public std::exception {
+public:
+	LogisticRegressionError ( int e ): code( e ) {}
+	virtual const char* what() const throw() {
+	    if ( code == NOT_UPDATED ) {
+	    	return "No update for delta (gradient) vector available.";
+	    }
+	    return "General Error";
+	}
+private:
+	int code;
+};
 
 
 /*
@@ -29,25 +47,27 @@ typedef Eigen::Map<Vec> VecMap;
  */
 class LogisticRegression {
 public:
-	LogisticRegression ( LayerSize n_in, LayerSize n_out, bool distributed=false ) {
+	LogisticRegression ( LayerSize n_in, LayerSize n_out, bool distrib=false ) :
 		// initialize theta = (W,b) with 0s; W gets the shape (n_in, n_out),
         // while b is a vector of n_out elements, making theta a vector of
         // n_in*n_out + n_out elements
-        theta = Vec::Zero( n_in * n_out + n_out );
+        theta( Vec::Zero( n_in * n_out + n_out ) ),
 
 		// map the weight matrix W to theta using shape = (n_in, n_out)
-		W = MatMap( theta.data(), n_in, n_out );
+		W( MatMap( theta.data(), n_in, n_out ) ),
 
 		// map the bias vector b to the last n_out elements of theta
-		b = VecMap( theta.data() + n_in * n_out, n_out );
+		b( VecMap( theta.data() + n_in * n_out, n_out ) ),
 
 		// intialize delta (gradient) vector and corresponding Maps
-		delta = Vec::Zero( n_in * n_out + n_out );
-		dW = MatMap( theta.data(), n_in, n_out );
-		db = VecMap( theta.data() + n_in * n_out, n_out );
+		delta( Vec::Zero( n_in * n_out + n_out ) ),
+		dW( MatMap( theta.data(), n_in, n_out ) ),
+		db( VecMap( theta.data() + n_in * n_out, n_out ) ),
 
-		updated = false; // prevent reading unitialized variables
-	}
+		distributed( distrib ), // controls parameter update behavior
+
+		updated( false ) // prevent reading unitialized variables
+	{}
 	~LogisticRegression () {}
 
 
@@ -58,7 +78,7 @@ public:
 		Mat probas = softmax( (X * W).rowwise() + b );
 
 		// compute the error
-		error = probas - y;
+		Mat error = probas - y;
 
 		// check if the algorithms is used in a distributed setting and only normalize
 		// the gradient if running on a single process
@@ -66,19 +86,19 @@ public:
 			dW = X.transpose() * error;
 			db = error.rowwise().sum();
 		} else {
-			dW = ( X.transpose() * error )
-			dW.noalias() += ( W * lambda ) / X.rows() // apply regularization
+			dW = ( X.transpose() * error );
+			dW.noalias() += ( W * lambda ) / X.rows(); // apply regularization
 			db = error.rowwise().sum() / X.rows();
 		}
 
 		updated = true;  // now safe to access gradient update data
 	}
 
-	Mat& softmax ( Mat& z ) {
+	Mat softmax ( Mat z ) {
 		return ( 1.0 / ( 1.0 + (-z).array().exp() ) );
 	}
 
-	void set_theta ( Vec& theta_update ) { theta << theta_update; }
+	void set_theta ( const Vec& theta_update ) { theta << theta_update; }
 
 	void set_parameters ( float a, float l, float e ) {
 		alpha = a; lambda = l; epsilon = e;
@@ -102,14 +122,22 @@ public:
 
 
 	/* PREDICTION AND ERROR */
-	Mat& predict_proba ( Mat& X ) {
+	Mat predict_proba ( Mat& X ) {
 		return softmax( (X * W).rowwise() + b );
 	}
 
-	Mat& predict ( Mat& X ) {
-		Mat pred;
-		softmax( (X * W).rowwise() + b ).colwise().maxCoeff(&pred);
-		return pred;
+	Vec predict ( Mat& X ) {
+		PredMat pred[X.rows()];
+		Mat probas = softmax( (X * W).rowwise() + b );
+		for ( int i=0; i < probas.rows(); ++i ) {			
+			probas.row( i ).maxCoeff( &pred[i] );
+		}
+		// convert to vector
+		Vec predvec( X.rows() );
+		for ( int i=0; i < probas.rows(); ++i ) {			
+			predvec[i] = pred[i];
+		}
+		return predvec;
 	}
 
 	// TODO: float errors () {}
@@ -120,29 +148,13 @@ private:
 	Vec theta, delta;
 	MatMap W, dW;
 	VecMap b, db; 
-	bool updated;
+	bool distributed, updated;
 
 	// update parameters
 	float alpha = 0.13, lambda = 0.0, epsilon = 0.00001;
 };
 
 
-/* ERROR HANDLING */
 
-#define NOT_UPDATED 0
-
-class LogisticRegressionError: public std::exception {
-public:
-	LogisticRegressionError ( int e ): code( e ) {}
-	virtual const char* what() const throw() {
-	    if ( code == NOT_UPDATED ) {
-	    	return "No update for delta (gradient) vector available.";
-	    }
-	    return "General Error";
-	}
-
-private:
-	int code;
-};
 
 #endif /* LOGISTIC_H_ */
