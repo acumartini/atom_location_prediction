@@ -8,6 +8,8 @@
 #ifndef LOGISTIC_H_
 #define LOGISTIC_H_
 
+#include <stdio.h>
+
 #define EIGEN_DEFAULT_TO_ROW_MAJOR
 #include "Eigen/Core"
 
@@ -21,13 +23,13 @@ typedef Eigen::MatrixXf::Index PredMat;
 
 
 /* ERROR HANDLING */
-#define NOT_UPDATED 0
+#define NO_UPDATE 0
 
 class LogisticRegressionError: public std::exception {
 public:
 	LogisticRegressionError ( int e ): code( e ) {}
 	virtual const char* what() const throw() {
-	    if ( code == NOT_UPDATED ) {
+	    if ( code == NO_UPDATE ) {
 	    	return "No update for delta (gradient) vector available.";
 	    }
 	    return "General Error";
@@ -61,8 +63,8 @@ public:
 
 		// intialize delta (gradient) vector and corresponding Maps
 		delta( Vec::Zero( n_in * n_out + n_out ) ),
-		dW( MatMap( theta.data(), n_in, n_out ) ),
-		db( VecMap( theta.data() + n_in * n_out, n_out ) ),
+		dW( MatMap( delta.data(), n_in, n_out ) ),
+		db( VecMap( delta.data() + n_in * n_out, n_out ) ),
 
 		distributed( distrib ), // controls parameter update behavior
 
@@ -72,8 +74,7 @@ public:
 
 
 	/* OPTIMIZATION */
-
-	void compute_gradient_update ( const Mat& X, const Mat& y ) {
+	void compute_gradient ( const Mat& X, const Mat& y ) {
 		// compute P( y | X )
 		Mat probas = softmax( (X * W).rowwise() + b );
 
@@ -84,11 +85,20 @@ public:
 		// the gradient if running on a single process
 		if ( distributed ) { 
 			dW = X.transpose() * error;
-			db = error.rowwise().sum();
+			db = error.colwise().sum();
 		} else {
-			dW = ( X.transpose() * error );
+			// printf( "enter\n" );
+			dW = X.transpose() * error;
+			// std::cout << dW << std::endl;
+			std::cout << dW.norm() << std::endl;
+			//printf( "1\n" );
 			dW.noalias() += ( W * lambda ) / X.rows(); // apply regularization
-			db = error.rowwise().sum() / X.rows();
+			//std::cout << dW << std::endl;
+			//printf( "2\n" );
+			//std::cout << error << std::endl;
+			db = error.colwise().mean();// / X.rows();
+			// std::cout << db << std::endl;
+			// printf( "exit\n" );
 		}
 
 		updated = true;  // now safe to access gradient update data
@@ -105,7 +115,7 @@ public:
 	}
 
 	const Vec& get_delta () const { 
-		if ( !updated ) { throw LogisticRegressionError( NOT_UPDATED ); }
+		if ( !updated ) { throw LogisticRegressionError( NO_UPDATE ); }
 		else {
 			return delta; 
 		}
@@ -114,8 +124,9 @@ public:
 	bool converged () { return dW.norm() <= epsilon; }
 
 	void update_theta () {
-		if ( !updated ) { throw LogisticRegressionError( NOT_UPDATED ); } 
+		if ( !updated ) { throw LogisticRegressionError( NO_UPDATE ); } 
 		else {
+			// std::cout << delta << std::endl;
 			theta.noalias() -= alpha * delta;
 		}
 	}
@@ -151,7 +162,7 @@ private:
 	bool distributed, updated;
 
 	// update parameters
-	float alpha = 0.13, lambda = 0.0, epsilon = 0.00001;
+	float alpha = 0.9, lambda = 0.0, epsilon = 0.00001;
 };
 
 
