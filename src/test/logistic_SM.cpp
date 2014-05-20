@@ -47,12 +47,15 @@ int main () {
 	// cout << labels.rows() << endl;
 
 	// fit dataset
-	int maxiter = 1000;
+	int maxiter = 100000;
 
 	// clf.compute_gradient_update( X, labels );
-
+	double grad_mag;
+	printf( "Interation : Magnitude\n" );
 	for ( int i = 0; i < maxiter; ++i ) {
 		clf.compute_gradient( X, y );
+		if ( clf.converged( grad_mag ) ) { break; }
+		printf( "%d : %lf\n", i, grad_mag );
 		clf.update_theta();
 	}
 

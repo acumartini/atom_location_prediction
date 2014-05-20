@@ -24,20 +24,23 @@ typedef Eigen::MatrixXf::Index PredMat;
 
 /* ERROR HANDLING */
 #define NO_UPDATE 0
+#define INVALID_THETA_UPDATE 1
 
 class LogisticRegressionError: public std::exception {
 public:
 	LogisticRegressionError ( int e ): code( e ) {}
 	virtual const char* what() const throw() {
 	    if ( code == NO_UPDATE ) {
-	    	return "No update for delta (gradient) vector available.";
+	    	return "No updated delta (gradient) vector available.";
+	    } else if ( code == INVALID_THETA_UPDATE ) {
+	    	return "Given theta parameters do not match the size of the current "
+	    		   "theta parameters.";
 	    }
 	    return "General Error";
 	}
 private:
 	int code;
 };
-
 
 /*
  * Multi-class Logistic Regression Class
@@ -72,14 +75,18 @@ public:
 	{}
 	~LogisticRegression () {}
 
-
 	/* OPTIMIZATION */
-	void compute_gradient ( const Mat& X, const Mat& y ) {
-		// compute P( y | X )
-		Mat probas = softmax( (X * W).rowwise() + b );
 
-		// compute the error
-		Mat error = probas - y;
+	/*
+	 * Computes a the updated detla (gradient) vector given a set of instances X with 
+	 * labels y.
+	 *
+	 * @params: X - matrix of m instances with n_in features
+	 * 			y - matrix of m labels with n_out columns
+	 */
+	void compute_gradient ( const Mat& X, const Mat& y ) {
+		Mat probas = softmax( (X * W).rowwise() + b ); // compute P( y | X )
+		Mat error = probas - y; // compute the error
 
 		// check if the algorithms is used in a distributed setting and only normalize
 		// the gradient if running on a single process
@@ -87,18 +94,9 @@ public:
 			dW = X.transpose() * error;
 			db = error.colwise().sum();
 		} else {
-			// printf( "enter\n" );
 			dW = X.transpose() * error;
-			// std::cout << dW << std::endl;
-			std::cout << dW.norm() << std::endl;
-			//printf( "1\n" );
 			dW.noalias() += ( W * lambda ) / X.rows(); // apply regularization
-			//std::cout << dW << std::endl;
-			//printf( "2\n" );
-			//std::cout << error << std::endl;
-			db = error.colwise().mean();// / X.rows();
-			// std::cout << db << std::endl;
-			// printf( "exit\n" );
+			db = error.colwise().mean();
 		}
 
 		updated = true;  // now safe to access gradient update data
@@ -108,12 +106,25 @@ public:
 		return ( 1.0 / ( 1.0 + (-z).array().exp() ) );
 	}
 
-	void set_theta ( const Vec& theta_update ) { theta << theta_update; }
+	/*
+	 * Allows the client to set the theta parameters 
+	 */
+	void set_theta ( const Vec& theta_update ) { 
+		if ( theta_update.size() != theta.size() ) {
+			throw LogisticRegressionError( INVALID_THETA_UPDATE );
+		}
+		theta << theta_update; }
 
+	/*
+	 * Allows the client to set internal optimization variables.
+	 */
 	void set_parameters ( float a, float l, float e ) {
 		alpha = a; lambda = l; epsilon = e;
 	}
 
+	/*
+	 * Returns the current delta (gradient) vector.
+	 */
 	const Vec& get_delta () const { 
 		if ( !updated ) { throw LogisticRegressionError( NO_UPDATE ); }
 		else {
@@ -121,22 +132,45 @@ public:
 		}
 	}
 
-	bool converged () { return dW.norm() <= epsilon; }
+	/*
+	 * Returns true if the magnitude of the gradient is less than or equal to the convergence
+	 * theshold epsilon.
+	 *
+	 * @params: mag - a double by reference that captures the gradient norm value
+	 */
+	bool converged ( double& mag ) { 
+		mag = dW.norm();
+		return mag <= epsilon;
+	}
 
+	/*
+	 * Updates the current theta parameters using the pre-computed gradient update if avaiable.
+	 * Throws an error is no new gradient update is avaible.
+	 */
 	void update_theta () {
 		if ( !updated ) { throw LogisticRegressionError( NO_UPDATE ); } 
 		else {
-			// std::cout << delta << std::endl;
 			theta.noalias() -= alpha * delta;
+			updated = false; // disallow theta updates until the gradient is re-computed
 		}
 	}
 
-
 	/* PREDICTION AND ERROR */
+	
+	/*
+	 * Returns the probability prediction matrix for the instances in X.
+	 *
+	 * @params: X - matrix of instances with n_in features
+	 */
 	Mat predict_proba ( Mat& X ) {
 		return softmax( (X * W).rowwise() + b );
 	}
 
+	/*
+	 * Returns a vector of class predictions for the instances in X.
+	 *
+	 * @params: X - matrix of instances with n_in features
+	 */
 	Vec predict ( Mat& X ) {
 		PredMat pred[X.rows()];
 		Mat probas = softmax( (X * W).rowwise() + b );
@@ -151,9 +185,6 @@ public:
 		return predvec;
 	}
 
-	// TODO: float errors () {}
-
-
 private:
 	// model parameters
 	Vec theta, delta;
@@ -164,8 +195,6 @@ private:
 	// update parameters
 	float alpha = 0.9, lambda = 0.0, epsilon = 0.00001;
 };
-
-
 
 
 #endif /* LOGISTIC_H_ */
