@@ -5,6 +5,11 @@
 #include <linits.h>
 #include <string>
 #include <dirent.h>
+#include <sstream>
+#include <iostream>
+#include <sstream>
+#include <algorithm>
+#include <iterator>
 
 #define EIGEN_DEFAULT_TO_ROW_MAJOR
 #include "Eigen/Core"
@@ -25,12 +30,20 @@ void count_instances( int taskid ) {
 
 	pDir = opendir( "/data/part" + std::to_string( taskid ) );
 	if (pDir != NULL) {
-	    while ( ( pDirent = readdir( pDir ) ) != NULL) {
-	        m++;
-	    }
-		m -= 2;
+	    while ( ( pDirent = readdir( pDir ) ) != NULL) { m++; }
+		m -= 2; // remove "." and ".." directory reads
 	    closedir (pDir);
 	}
+}
+
+void count_features( int taskid ) {
+	std::string line;
+	std::getline(infile, line);
+    istringstream iss( line );
+    vector<string> tokens{istream_iterator<string>{iss},
+         istream_iterator<string>{}};
+    n = tokens.size() - 1; // -1 for label
+    printf( "n = %lu\n", n );
 }
 
 int main (int argc, char *argv[]) {
@@ -61,10 +74,11 @@ int main (int argc, char *argv[]) {
 	count_instances( taskid );
 
 	// determine number of features
+	count_features( taskid );
 
 
 	/* DATA INITIALIZATION */
-	X = 
+	// X = 
 
         
     /* CLASSIFICATION MODEL INITIALIZATION */
