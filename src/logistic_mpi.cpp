@@ -21,6 +21,7 @@ using namespace Eigen;
 typedef unsigned long ProbSize;
 
 // globla model variables
+std::sting datadir;
 ProbSize m, n; // numbers of instance and features
 
 
@@ -28,10 +29,8 @@ void count_instances( int taskid ) {
 	struct dirent *pDirent;
 	DIR *pDir;
 	m = 0;
-
-	std::string datadir = "/data/part";
-	datadir += std::to_string( taskid );
 	pDir = opendir( datadir.c_str() );
+
 	if (pDir != NULL) {
 	    while ( ( pDirent = readdir( pDir ) ) != NULL) { m++; }
 		m -= 2; // remove "." and ".." directory reads
@@ -41,7 +40,7 @@ void count_instances( int taskid ) {
 
 void count_features( int taskid ) {
 	std::string line;
-	std::getline( infile, line );
+	std::getline( datadir, line );
     std::istringstream iss( line );
     std::vector<std::string> tokens{
     	std::istream_iterator<std::string>{iss},
@@ -75,6 +74,10 @@ int main (int argc, char *argv[]) {
 
 
 	/* DATA PREPROCESSING */
+	// define data directory for each node
+	std::string datadir = "/data/part";
+	datadir += std::to_string( taskid );
+
 	// determine number of instances
 	count_instances( taskid );
 
