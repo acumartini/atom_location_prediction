@@ -155,7 +155,7 @@ public:
 		}
 	}
 
-	/* PREDICTION AND ERROR */
+	/* PREDICTION */
 	
 	/*
 	 * Returns the probability prediction matrix for the instances in X.

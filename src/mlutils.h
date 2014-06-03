@@ -37,9 +37,9 @@ namespace mlu {
 				unique.emplace( y[i], index_count++ );
 			}
 		}
-		for ( auto& kv : unique ) {
-			printf( "k = %lf, v = %d\n", kv.first, kv.second );
-		}
+		// for ( auto& kv : unique ) {
+		// 	printf( "k = %lf, v = %d\n", kv.first, kv.second );
+		// }
 
 		// create label matrix
 		if ( unique.size() == 2 ) { // simple classification problem (column vector)
