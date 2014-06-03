@@ -25,7 +25,7 @@ ProbSize m, n; // numbers of instance and features
 
 
 void count_instances( int taskid ) {
-	struct *pDirent;
+	struct dirent *pDirent;
 	DIR *pDir;
 	m = 0;
 
