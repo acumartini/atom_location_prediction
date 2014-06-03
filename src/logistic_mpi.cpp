@@ -43,8 +43,10 @@ void count_features( int taskid ) {
 	std::string line;
 	std::getline( infile, line );
     std::istringstream iss( line );
-    std::vector<string> tokens{istream_iterator<string>{iss},
-         istream_iterator<string>{}};
+    std::vector<std::string> tokens{
+    	std::istream_iterator<std::string>{iss},
+    	std::istream_iterator<std::string>{}
+    };
     n = tokens.size() - 1; // -1 for label
     printf( "n = %lu\n", n );
 }
