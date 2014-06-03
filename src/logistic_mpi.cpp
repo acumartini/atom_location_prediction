@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#include <linits.h>
+#include <limits.h>
 #include <string>
 #include <dirent.h>
 #include <sstream>
@@ -10,6 +10,7 @@
 #include <sstream>
 #include <algorithm>
 #include <iterator>
+#include <vector>
 
 #define EIGEN_DEFAULT_TO_ROW_MAJOR
 #include "Eigen/Core"
@@ -28,7 +29,9 @@ void count_instances( int taskid ) {
 	DIR *pDir;
 	m = 0;
 
-	pDir = opendir( "/data/part" + std::to_string( taskid ) );
+	std::string datadir = "/data/part";
+	datadir += std::to_string( taskid );
+	pDir = opendir( datadir.c_str() );
 	if (pDir != NULL) {
 	    while ( ( pDirent = readdir( pDir ) ) != NULL) { m++; }
 		m -= 2; // remove "." and ".." directory reads
@@ -38,9 +41,9 @@ void count_instances( int taskid ) {
 
 void count_features( int taskid ) {
 	std::string line;
-	std::getline(infile, line);
-    istringstream iss( line );
-    vector<string> tokens{istream_iterator<string>{iss},
+	std::getline( infile, line );
+    std::istringstream iss( line );
+    std::vector<string> tokens{istream_iterator<string>{iss},
          istream_iterator<string>{}};
     n = tokens.size() - 1; // -1 for label
     printf( "n = %lu\n", n );
