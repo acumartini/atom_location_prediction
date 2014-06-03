@@ -21,7 +21,7 @@ using namespace Eigen;
 typedef unsigned long ProbSize;
 
 // globla model variables
-std::sting datadir;
+std::string datadir;
 ProbSize m, n; // numbers of instance and features
 
 
