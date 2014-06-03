@@ -6,6 +6,7 @@
 #include <string>
 #include <dirent.h>
 #include <sstream>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <algorithm>
@@ -39,8 +40,9 @@ void count_instances( int taskid ) {
 }
 
 void count_features( int taskid ) {
+	std::ifstream infile( datadir );
 	std::string line;
-	std::getline( datadir, line );
+	std::getline( infile, line );
     std::istringstream iss( line );
     std::vector<std::string> tokens{
     	std::istream_iterator<std::string>{iss},
