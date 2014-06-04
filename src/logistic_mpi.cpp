@@ -35,17 +35,17 @@ void reduce_unique_labels ( int *, int *, int *, MPI_Datatype * );
 void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dtype )
 {
 	int label;
-    ClassSet in, out;
+    ClassSet merge;
     for ( int i=0; i<*len; ++i ) {
     	label = invec[i];
-    	if ( label != -1 ) { in.insert( label ); }
+    	if ( label != -1 ) { merge.insert( label ); }
     }
     for ( auto& kv : classmap ) {
-    	in.insert( kv.first );
+    	merge.insert( kv.first );
     }
     int idx = 0;
-    for ( auto& elem : in ) {
-    	out[idx++] = elem;
+    for ( auto& elem : merge ) {
+    	inoutvec[idx++] = elem;
     }
 }
 
@@ -75,7 +75,6 @@ void count_features( std::string datafile, int taskid ) {
     	std::istream_iterator<std::string>{}
     };
     n = tokens.size() - 1; // -1 for label
-    printf( "n = %lu\n", n );
 }
 
 int main (int argc, char *argv[]) {
@@ -103,7 +102,7 @@ int main (int argc, char *argv[]) {
 
 	/* DATA PREPROCESSING */
 	// define data directory for each node
-	std::str taskstr = std::to_string( taskid );
+	std::string taskstr = std::to_string( taskid );
 	std::string datafile = "./data/data";
 	datafile += taskstr + "/train" + taskstr + ".tsv";
     // datafile += "/train";
@@ -118,6 +117,8 @@ int main (int argc, char *argv[]) {
 
 
 	/* DATA INITIALIZATION */
+    m = 20;
+    printf( "m = %lu n = %lu\n", m, n );
 	Mat X( m, n );
 	Vec labels( m );
 	double feat_val, label;
@@ -125,11 +126,14 @@ int main (int argc, char *argv[]) {
 	for ( ProbSize i=0; i<m; ++i ) {
 		for ( ProbSize j=0; j<n; ++j ) {
 			data >> feat_val;
+            printf( "feat_val = %f\n", feat_val );
 			X(i,j) = feat_val;
 		}
 		data >> label;
+        printf( "label = %f\n", label );
 		labels[i] = label;
 	}
+    std::cout << X << "\n" << labels;
 
 	/* FORMAT LABELS */
 	// get unique labels
@@ -152,7 +156,7 @@ int main (int argc, char *argv[]) {
 	int global_unique_labels[max_size];
 	MPI_Op op;
 	MPI_Op_create( (MPI_User_function *)reduce_unique_labels, 1, &op );
-	MPI_AllReduce( unique_labels, global_unique_labels, max_size, MPI_INT, op, MPI_COMM_WORLD );
+	MPI_Allreduce( unique_labels, global_unique_labels, max_size, MPI_INT, op, MPI_COMM_WORLD );
 	
 	// update local classmap
 	classmap.clear();
@@ -167,10 +171,9 @@ int main (int argc, char *argv[]) {
 
 	// format the local label set into a matrix based on global class map
 	Mat y = mlu::format_labels( labels, classmap );
+    std::cout << labels;
+    printf( "classmap.size() = %d\n", classmap.size() );
 	std::cout << y;
-
-        
-    /* CLASSIFICATION MODEL INITIALIZATION */
 
 
 	// initialize and communicate paramters

@@ -28,7 +28,7 @@ namespace mlu {
 		X = tmp.matrix();
 	}
 
-	void get_unique_labels( const Vec& y, ClassMap& unique ) {
+	void get_unique_labels( Vec& y, ClassMap& unique ) {
 		ClassMap::const_iterator got;
 		
 		// find unique items and map them to incremental indices
@@ -44,7 +44,7 @@ namespace mlu {
 		// }
 	}
 
-	Mat& format_labels ( Vec& y, const ClassMap& unique ) {
+	Mat format_labels ( Vec& y, ClassMap& unique ) {
 		// create label matrix
 		if ( unique.size() == 2 ) { // simple classification problem (column vector)
 			Mat labels = Mat::Zero( y.size(), 1 );
