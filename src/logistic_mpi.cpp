@@ -34,7 +34,7 @@ void count_instances( int taskid ) {
 
 	if (pDir != NULL) {
 	    while ( ( pDirent = readdir( pDir ) ) != NULL) { m++; }
-		m -= 2; // remove "." and ".." directory reads
+		m -= 2; // ignore "." and ".." directory reads
 	    closedir (pDir);
 	}
 }
@@ -77,7 +77,7 @@ int main (int argc, char *argv[]) {
 
 	/* DATA PREPROCESSING */
 	// define data directory for each node
-	std::string datadir = "/data/part";
+	std::string datadir = "/data/data";
 	datadir += std::to_string( taskid );
 
 	// determine number of instances
@@ -96,9 +96,10 @@ int main (int argc, char *argv[]) {
 
 	// initialize and communicate paramters
 	if (taskid == MASTER) {
+		// init and send parameters
 
 	} else {
-		// recieve network parameters and pass to local classifier
+		// recieve network parameters and update local classifier
 
 	}
 
