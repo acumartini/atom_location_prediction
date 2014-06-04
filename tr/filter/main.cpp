@@ -13,6 +13,7 @@
 #include <cmath>
 #include <cstdint>
 #include <iostream>
+#include <fstream>
 #include <cilk/cilk.h>
 using namespace std;
 
@@ -190,8 +191,8 @@ int main( int argc, char* argv[] ) {
     ifstream f("text.txt");
     string line;
     int i = 0;
-    for (i; std::getline(f, line); ++i);
-    f.close()   
+    for (i; getline(f, line); ++i);
+    f.close();
 
 
 
