@@ -14,6 +14,7 @@
 
 #include "mpi.h"
 #include "logistic.h"
+#include "mlutils.h"
 
 #define EIGEN_DEFAULT_TO_ROW_MAJOR
 #include "Eigen/Core"
