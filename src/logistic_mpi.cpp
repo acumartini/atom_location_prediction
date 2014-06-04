@@ -55,11 +55,11 @@ void count_features( int taskid ) {
 int main (int argc, char *argv[]) {
     // handle cmd args
 	int batch_size;
-	if ( argc > 1 ) {
+	if ( argc > 2 ) {
 		printf( " Usage: ./logistic_mpi <batch_size>");
 		exit( 0 );
-	} else if ( argc == 1 ) {
-		batch_size = atoi( argv[0] ); // mini-batch processing
+	} else if ( argc == 2 ) {
+		batch_size = atoi( argv[1] ); // mini-batch processing
 	} else {
 		batch_size = INT_MIN; // batch processing
 	}
