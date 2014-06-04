@@ -20,7 +20,7 @@
 #include "Eigen/Core"
 using namespace Eigen;
 
-#define  MASTER		0
+#define MASTER 0
 
 typedef unsigned long ProbSize;
 
@@ -127,7 +127,7 @@ int main (int argc, char *argv[]) {
 		data >> label;
 		labels[i] = label;
 	}
-    // std::cout << X << "\n" << labels << "\n";
+    std::cout << X << "\n" << labels << "\n";
 
 	/* FORMAT LABELS */
 	// get unique labels
@@ -153,6 +153,7 @@ int main (int argc, char *argv[]) {
 	MPI_Allreduce( unique_labels, global_unique_labels, max_size, MPI_INT, op, MPI_COMM_WORLD );
 	
 	// update local classmap
+	std::sort( global_unique_labels, global_unique_labels + max_size );
 	classmap.clear();
 	int labeltmp;
 	idx=0;
