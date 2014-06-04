@@ -51,11 +51,11 @@ void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dt
 }
 
 
-void count_instances( std::string datafile ) {
+void count_instances( std::string datadir ) {
 	struct dirent *pDirent;
 	DIR *pDir;
 	m = 0;
-	pDir = opendir( datafile.c_str() );
+	pDir = opendir( datadir.c_str() );
 
 	if (pDir != NULL) {
 	    while ( ( pDirent = readdir( pDir ) ) != NULL) { m++; }
@@ -64,8 +64,8 @@ void count_instances( std::string datafile ) {
 	}
 }
 
-void count_features( std::string datafile, int taskid ) {
-	std::ifstream infile( datafile );
+void count_features( std::string datadir, int taskid ) {
+	std::ifstream infile( datadir + "0.tsv" );
 	std::string line;
 	std::getline( infile, line );
     std::istringstream iss( line );
@@ -79,13 +79,25 @@ void count_features( std::string datafile, int taskid ) {
 int main (int argc, char *argv[]) {
     // handle cmd args
 	int batch_size;
-	if ( argc > 2 ) {
-		printf( " Usage: ./logistic_mpi <batch_size>");
+	bool output = false;
+	std::string datadir;
+	std::string output_file;
+	if ( argc > 3 || argcv < 2 ) {
+		printf( " Usage: ./logistic_mpi <data_directory> <batch_size> <model_output_file");
 		exit( 0 );
-	} else if ( argc == 2 ) {
-		batch_size = atoi( argv[1] ); // mini-batch processing
+	} else if ( argc == 4 ) {
+		datadir = argv[1];
+		batch_size = atoi( argv[2] ); // mini-batch processing
+		output_file = argv[3];
+		output = true;
+	} else if ( argc == 3 ) {
+		datadir = argv[1];
+		batch_size = atoi( argv[2] ); // mini-batch processing
+		output_file = "clf.model";
 	} else {
+		datadir = argv[1];
 		batch_size = INT_MIN; // batch processing
+		output_file = "clf.model";
 	}
 
 	// initialize/populate mpi specific vars local to each node
@@ -100,16 +112,11 @@ int main (int argc, char *argv[]) {
 
 
 	/* DATA PREPROCESSING */
-	// define data directory for each node
-	std::string taskstr = std::to_string( taskid );
-	std::string datafile = "./data/data";
-	datafile += taskstr + "/train" + taskstr + ".tsv";
-
 	// determine number of instances
-	count_instances( datafile );
+	count_instances( datadir );
 
 	// determine number of features
-	count_features( datafile, taskid );
+	count_features( datadir, taskid );
 
 
 	/* DATA INITIALIZATION */
@@ -154,9 +161,6 @@ int main (int argc, char *argv[]) {
 	
 	// update local classmap
 	std::sort( global_unique_labels, global_unique_labels + max_size );
-	for ( int i=0; i<max_size; ++i ) {
-		printf( "part %d label %d\n", taskid, global_unique_labels[i] );
-	}
 	classmap.clear();
 	int labeltmp;
 	idx=0;

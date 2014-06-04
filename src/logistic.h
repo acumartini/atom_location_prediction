@@ -189,7 +189,7 @@ private:
 	// model parameters
 	Vec theta, delta;
 	MatMap W, dW;
-	VecMap b, db; 
+	VecMap b, db;
 	bool distributed, updated;
 
 	// update parameters
