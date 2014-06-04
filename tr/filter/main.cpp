@@ -13,6 +13,7 @@
 #include <cmath>
 #include <cstdint>
 #include <iostream>
+#include <cilk/cilk.h>
 using namespace std;
 
 struct pixel {
@@ -98,8 +99,8 @@ void apply_stencil(const int radius, const double stddev, const int rows, const 
     
     
     
-	for(int i = 0; i < rows; ++i) {
-		for(int j = 0; j < cols; ++j) {
+	cilk_for(int j = 0; j < cols; ++j) {
+		for(int i = 0; i < rows; ++i) {
 			const int out_offset = i + (j*rows);
 			// For each pixel, do the stencil
 			for(int x = i - radius, kx = 0; x <= i + radius; ++x, ++kx) {
@@ -120,9 +121,9 @@ void apply_kernelY(const int radius, const int rows, const int cols, float * con
 	double kernel[dim*dim];
 	prewittY_kernel(dim, dim, kernel);
     
-	for(int i = 0; i < rows; ++i) {
+	cilk_for(int j = 0; j < cols; ++j) {
+		for(int i = 0; i < rows; ++i) {
         
-		for(int j = 0; j < cols; ++j) {
 			const int out_offset = i + (j*rows);
 			// For each pixel, do the stencil
             
@@ -146,9 +147,9 @@ void apply_kernelX(const int radius, const int rows, const int cols, float * con
 	double kernel[dim*dim];
 	prewittX_kernel(dim, dim, kernel);
     
-	for(int i = 0; i < rows; ++i) {
+	cilk_for(int j = 0; j < cols; ++j) {
+		for(int i = 0; i < rows; ++i) {
         
-		for(int j = 0; j < cols; ++j) {
 			const int out_offset = i + (j*rows);
 			// For each pixel, do the stencil
             
@@ -185,7 +186,16 @@ int main( int argc, char* argv[] ) {
 		std::cerr << "Usage: " << argv[0] << " inputfile outputfile"<<std::endl;
 		return 1;
 	}
-    
+
+    ifstream f("text.txt");
+    string line;
+    int i = 0;
+    for (i; std::getline(f, line); ++i);
+    f.close()   
+
+
+
+
     FILE * inputfile;
     inputfile = fopen(argv[1],"r");
     FILE * outputfile;
@@ -194,7 +204,7 @@ int main( int argc, char* argv[] ) {
     {
         float image[MATRIX_POWER*MATRIX_POWER];
         char labelstring[256];
-        while (!feof(inputfile))
+        cilk_for(int k; k < i; k++)
         {
             memset(image, 0, MATRIX_POWER*MATRIX_POWER*sizeof(float));
             memset(labelstring,0,256*sizeof(char));
