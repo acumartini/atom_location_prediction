@@ -1,0 +1,320 @@
+/*
+Basic raytracer library
+Welsey Erickson - 2014
+*/
+
+#include <math.h>
+#include <iostream>
+
+using namespace std;
+
+// Wooo Constants!
+#define PI 3.14159265
+#define E  2.71
+
+// Constants for root finding:
+// -Tolerance is the greatest error from the root.
+#define TOLERANCE 0.001
+// -Max steps determines how many refinements will
+//  be tried until giving up
+#define MAX_STEPS 1000
+
+// Constants for calculating the norm via a basic derivative.
+#define dx 0.00001l
+#define dy dx
+
+// Our main data types:
+typedef long double Flt;
+typedef Flt Vec[3];
+typedef Vec Point;
+
+typedef struct Ray {
+  Point P; //position/origin
+  Point D; //direction, unit length
+} Ray;
+
+
+// Stream Printing Methods:
+//  -Vec
+ostream& operator<<(ostream& os, const Vec vec)
+{
+  //  os << "x:" << vec[0] << " y:" << vec[1] << " z:" << vec[2] << " ";
+  os << vec[0] << " " << vec[1] << " " << vec[2];
+  return os;
+}
+//  -Ray
+ostream& operator<<(ostream& os, const Ray * ray)
+{
+  //  os << ray.P << " to " << ray.D;
+  os << ray->P << " " << ray->D;
+  return os;
+}
+
+// Main Vector Functions:
+
+// Returns the length of the vector
+Flt VecLen(Vec A){
+  return sqrt(A[0]*A[0]+A[1]*A[1]+A[2]*A[2]);
+}
+
+// Returns the dot product of two vectors.
+Flt VecDot(Vec A, Vec B)
+{
+  return A[0]*B[0]+A[1]*B[1]+A[2]*B[2];
+}
+
+// Stores the cross product of two vectors into a third.
+void VecCross(Vec A, Vec B, Vec C){
+  C[0]=A[1]*B[2]-A[2]*B[1];
+  C[1]=A[2]*B[0]-A[0]*B[2];
+  C[2]=A[0]*B[1]-A[1]*B[0];
+}
+
+// Copies one vector into another.
+void VecCopy(Vec A, Vec B){
+  B[0]=A[0];
+  B[1]=A[1];
+  B[2]=A[2];
+}
+
+// Stores the sum of two vectors into a third.
+void VecAdd(Vec A, Vec B, Vec C){
+  C[0]=A[0]+B[0];
+  C[1]=A[1]+B[1];
+  C[2]=A[2]+B[2];
+}
+
+// Stores the difference of two vectors into a third.
+void VecSub(Vec A, Vec B, Vec C){
+  C[0]=A[0]-B[0];
+  C[1]=A[1]-B[1];
+  C[2]=A[2]-B[2];
+}
+
+// Multiplies a vector by a scalar.
+void VecMult(Flt a, Vec A, Vec C) {
+  C[0]=a*A[0];
+  C[1]=a*A[1];
+  C[2]=a*A[2];
+}
+
+// Stores the linear combination of two vectors into a third.
+void VecComb(Flt a, Vec A, Flt b, Vec B, Vec C) {
+  C[0]=a*A[0]+b*B[0];
+  C[1]=a*A[1]+b*B[1];
+  C[2]=a*A[2]+b*B[2];
+}
+
+// Normalizes a vector and returns the norm.
+Flt VecUnit(Vec A, Vec B){
+  Flt norm=VecLen(A);
+  B[0]=A[0]/norm;
+  B[1]=A[1]/norm;
+  B[2]=A[2]/norm;
+  return norm;
+}
+
+// Returns a point on the ray a distance t from the origin.
+void RayPoint(Ray * A, Flt t, Point B){
+  VecComb(1.0,A->P,t,A->D,B);
+}
+
+// Constructs a vector from a radius and two angles.
+void AngleToVec( Flt r, Flt phi, Flt theta, Vec A){
+  A[0] = r*cos(phi)*sin(theta);
+  A[1] = r*sin(phi)*sin(theta);
+  A[2] = r*cos(theta);
+}
+
+// Computes the intersection of a vector with a surface within a
+// given interval. Will return false if the intersection fails.
+bool RayIntersection(Ray * ray, Flt (*f)(Flt, Flt), Flt tstart, Flt tend, Vec B){
+  Flt t = (tstart + tend)/(2.0l);
+  Flt a = tstart;
+  Flt b = tend;
+  int steps=0;
+
+  // Each step we compute the midpoint of our interval and evaluate
+  // the function. We compare the direction of the error between the
+  // beginning of the interval to the midpoint. If the errors are in
+  // the same direction the zero must be in the other half of the
+  // interval, so recursively explore that half.
+  for(;;){
+    t = (a + b)/(2.0l);
+
+    RayPoint(ray,a,B);
+    Flt a_error = B[2]-(*f)(B[0],B[1]);
+    RayPoint(ray,b,B);
+    Flt b_error = B[2]-(*f)(B[0],B[1]);
+
+    RayPoint(ray,t,B);
+    Flt error = B[2]-(*f)(B[0],B[1]);
+    steps++;
+
+    /* //Debugging printouts
+    cerr << "steps:" << steps;
+    cerr << " err:" << error;
+    cerr << " aerr:" << a_error;
+    cerr << " berr:" << b_error;
+    cerr << " aerr*err:" << error*a_error;
+    cerr << " berr*err:" << error*a_error;
+    cerr << " t:" << t;
+    cerr << " a:" << a;
+    cerr << " b:" << b;
+    cerr << "\n";
+    */
+
+    // Stop if we've tried too long.
+    if(steps>MAX_STEPS){
+      return false;
+    }
+
+    // Check tolerance, if good, return. We already stored the output.
+    if(error*error<TOLERANCE*TOLERANCE){
+      return true;
+    }
+
+    // Are errors in same or different directions?
+    if(error*a_error<0.0l){
+      //a=a;
+      b=t;
+    } else {
+      a=t;
+      //b=b;
+    }
+  }
+}
+
+// This calculates the normal vectors on the given surface.
+// Vec B is the approximate location of the intersection; we
+// could just send B[0],B[1], but this is more consise.
+void CalculateNormal( Vec B, Flt (*f)(Flt, Flt), Vec normal){
+
+  Vec vx;
+  Vec vy;
+  Vec norm_temp;
+
+  // X derivative
+  vx[0]=dx;
+  vx[1]=0;
+  vx[2]=((*f)(B[0]+dx/2.0l,B[1])-(*f)(B[0]-dx/2.0l,B[1]));
+  // Y derivative
+  vy[0]=0;
+  vy[1]=dy;
+  vy[2]=((*f)(B[0],B[1]+dy/2.0l)-(*f)(B[0],B[1]-dy/2.0l));
+
+  // The normal is just perpindicular to the derivatives.
+  VecCross(vx,vy,norm_temp);
+
+  // Normalize the output, since we don't want magnitude.
+  VecUnit(norm_temp,normal);
+}
+
+
+// This computes a refracted beam according to Snell's Law.
+// To do this we calculate the angle to the norm in the plane
+// of reflection, then write out vector as linear combination
+// of the norm and the perpindicular component.
+void SnellsLaw(Flt n1, Flt n2, Vec Norm, Vec In, Vec Out){
+
+  // Snell's law, 
+  Flt costheta1 = VecDot(In,Norm)/(VecLen(In)*VecLen(Norm));
+  Flt sintheta1 = sqrt(1-(costheta1*costheta1));
+
+  Flt theta2 = asin(sintheta1*(n1/n2));
+
+  // Alternate methods and debugging:
+  //  theta1 = acos(VecDot(In,Norm)/(VecLen(In)*VecLen(Norm)));
+  //  cerr << "theta1:" << theta1 << ",";
+  //  cerr << sin(theta1) << "\n";
+  //  cerr << "sintheta1:" << sintheta1 << " theta2:" << theta2 << " 1-cos^2:" << (1-(costheta1*costheta1)) << "\n" ;
+  // Flt theta2 = asin(sin(theta1)*n2/n1);
+  //  cerr << "theta2:" << theta2;
+
+
+  // components in norm direction and normperp direction
+  Flt a_n,a_p; 
+
+  a_n = cos(theta2);
+  a_p = sin(theta2);
+
+  Vec Tmp,Perp;
+
+  // This next section we compute the perpindicular direction to
+  // to the norm that is still in the plane of refraction. Draw
+  // some vectors to convince yourself that this is appropriate.
+  VecCross(Norm,In,Tmp);
+  VecCross(Norm,Tmp,Perp);
+
+  // We need to normalize the vectors before we take a linear
+  // combination of them, since who knows how long either the
+  // Norm or In vectors really were. We only care about the
+  // direction in this case.
+  // Note that we have a few side effects here, probably wont hurt.
+  VecUnit(Perp,Tmp);
+  VecCopy(Tmp,Perp);
+
+  VecUnit(Norm,Tmp);
+  VecCopy(Tmp,Norm);
+
+  // Take a linear combination of each direction according to
+  // the angle from Snell's law, then normalize it:
+  VecComb(a_n,Norm,-a_p,Perp,Tmp);
+  VecUnit(Tmp,Out);
+}
+
+// Given an input ray this will compute an output ray according
+// to Snell's law and the indicies given. The intersection must
+// occur within the given interval.
+// This is a very simple implementation, and will have unwanted
+// effects if used improperly. This will change the direction
+// the light is supposed to propegate in order to garuntee a
+// collision, for example.
+bool RefractRay(Ray * input_ray, Ray * output_ray, Flt n1, Flt n2, Flt tstart, Flt tend, Flt (*f)(Flt, Flt)){
+  Vec vect_normal;
+  Vec vect_intersect;
+  Vec vect_displace;
+
+  // Find where ray intersects with surface. If there is no
+  // intersection, return false.
+  if(!(RayIntersection(input_ray, (*f), tstart, tend, vect_intersect))){
+    // Not sure I need these now. Were used
+    // for initializing variables which may
+    // not have been defined.
+    output_ray->P[0]=0.0;
+    output_ray->P[1]=0.0;
+    output_ray->P[2]=0.0;
+    output_ray->D[0]=0.0;
+    output_ray->D[1]=0.0;
+    output_ray->D[2]=0.0;
+    return false;
+  }
+
+  // Output ray starts at intersection point.
+  VecCopy(vect_intersect,output_ray->P);
+
+  // Find the normal vector at intersection point.
+  CalculateNormal(vect_intersect, (*f), vect_normal);
+
+  // Calculate the displacement vector from the ray starting
+  // point to the intersection point.
+  VecSub(vect_intersect, input_ray->P, vect_displace);
+
+  // Output ray points in direction determined by snells law
+  SnellsLaw(n1,n2,vect_normal,vect_displace,output_ray->D);
+
+  /* //Debugging output:
+  cerr << " vect_normal:" << vect_normal;
+  cerr << " vect_intersect:" << vect_intersect;
+  cerr << " vect_displace:" << vect_displace;
+  cerr << " vect_outP:" << output_ray->P;
+  cerr << " vect_outD:" << output_ray->D;
+  cerr << "\n";
+  //  cout << output_ray->P << "\n";
+  //  cout << output_ray->D << "\n\n";
+  */
+
+  // If we made it here, the output ray has been
+  // calculated, return true.
+  return true;
+}
