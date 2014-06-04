@@ -10,9 +10,11 @@
 
 #include <iostream>
 #include <unordered_map>
+#include <unordered_set>
 #include "logistic.h"  // just to get typdefs (fix this later)
 
-typedef std::unordered_map<double, unsigned int> ClassMap;
+typedef std::unordered_map<double, int> ClassMap;
+typedef std::unordered_set<int> ClassSet;
 
 namespace mlu {
 	
@@ -26,7 +28,7 @@ namespace mlu {
 		X = tmp.matrix();
 	}
 
-	Mat format_labels ( Vec& y, ClassMap& unique ) {
+	void get_unique_labels( const Vec& y, ClassMap& unique ) {
 		ClassMap::const_iterator got;
 		
 		// find unique items and map them to incremental indices
@@ -40,7 +42,9 @@ namespace mlu {
 		// for ( auto& kv : unique ) {
 		// 	printf( "k = %lf, v = %d\n", kv.first, kv.second );
 		// }
+	}
 
+	Mat& format_labels ( Vec& y, const ClassMap& unique ) {
 		// create label matrix
 		if ( unique.size() == 2 ) { // simple classification problem (column vector)
 			Mat labels = Mat::Zero( y.size(), 1 );

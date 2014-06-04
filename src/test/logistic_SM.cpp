@@ -42,6 +42,7 @@ int main () {
 	
 	// format labels
 	ClassMap classmap;
+	mlu::get_unique_labels( labels, classmap );
 	Mat y = mlu::format_labels( labels, classmap );
 	// cout << labels << endl;
 	// cout << labels.rows() << endl;

@@ -1,4 +1,3 @@
-#include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -13,6 +12,9 @@
 #include <iterator>
 #include <vector>
 
+#include "mpi.h"
+#include "logistic.h"
+
 #define EIGEN_DEFAULT_TO_ROW_MAJOR
 #include "Eigen/Core"
 using namespace Eigen;
@@ -22,15 +24,36 @@ using namespace Eigen;
 typedef unsigned long ProbSize;
 
 // globla model variables
-std::string datadir;
 ProbSize m, n; // numbers of instance and features
+ClassMap classmap; // a map of labels to label indices
+
+// MPI reduce ops
+void reduce_unique_labels ( int *, int *, int *, MPI_Datatype * );
+// void reduce_gradient_update ( int *, int *, int *, MPI_Datatype * );
+ 
+void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dtype )
+{
+	int label;
+    ClassSet in, out;
+    for ( int i=0; i<&len; ++i ) {
+    	label = invec[i];
+    	if ( label != -1 ) { in.insert( label ); }
+    }
+    for ( auto& kv : classmap ) {
+    	in.insert( kv.first );
+    }
+    int idx = 0;
+    for ( auto& elem : in ) {
+    	out[i++] = elem;
+    }
+}
 
 
 void count_instances( int taskid ) {
 	struct dirent *pDirent;
 	DIR *pDir;
 	m = 0;
-	pDir = opendir( datadir.c_str() );
+	pDir = opendir( datafile.c_str() );
 
 	if (pDir != NULL) {
 	    while ( ( pDirent = readdir( pDir ) ) != NULL) { m++; }
@@ -39,9 +62,9 @@ void count_instances( int taskid ) {
 	}
 }
 
-void count_features( std::string datadir, int taskid ) {
-	std::ifstream infile( datadir );
-    printf( "datadir = %s\n", datadir.c_str() );
+void count_features( std::string datafile, int taskid ) {
+	std::ifstream infile( datafile );
+    printf( "datafile = %s\n", datafile.c_str() );
 	std::string line;
 	std::getline( infile, line );
     printf( "line = %s\n", line.c_str() );
@@ -79,22 +102,70 @@ int main (int argc, char *argv[]) {
 
 	/* DATA PREPROCESSING */
 	// define data directory for each node
-	std::string datadir = "./data/data";
-	datadir += std::to_string( taskid );
-    datadir += "/train";
-    datadir +=  std::to_string( taskid );
-    datadir += ".tsv";
-
+	std::str taskstr = std::to_string( taskid );
+	std::string datafile = "./data/data";
+	datafile += taskstr + "/train" + taskstr + ".tsv";
+    // datafile += "/train";
+    // datafile += std::to_string( taskid );
+    // datafile += ".tsv";
 
 	// determine number of instances
 	count_instances( taskid );
 
 	// determine number of features
-	count_features( datadir, taskid );
+	count_features( datafile, taskid );
 
 
 	/* DATA INITIALIZATION */
-	// X = 
+	Mat X( m, n );
+	Vec labels( m );
+	double feat_val, label;
+	std::ifstream data( datafile );
+	for ( ProbSize i=0; i<m; ++i ) {
+		for ( ProbSize j=0; j<n; ++j ) {
+			data >> feat_val;
+			X(i,j) = feat_val;
+		}
+		data >> label;
+		labels[i] = label;
+	}
+
+	/* FORMAT LABELS */
+	// get unique labels
+	mlu::get_unique_labels( labels, classmap );
+
+	// allreduce to obtain maximum label set size
+	int local_size = classmap.size();
+	int max_size = 0;
+	MPI_Allreduce( &local_size, &max_size, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
+
+	// allreduce to obtain global unique label set
+	int unique_labels[max_size];
+	for ( int i=0; i<max_size; ++i ) {
+		unique_labels[i] = -1;
+	}
+	int idx = 0;
+	for ( auto& kv : classmap ) {
+		unique_labels[idx++] = kv.first;
+	}
+	int global_unique_labels[max_size];
+	MPI_Op op;
+	MPI_Op_create( (MPI_User_function *)reduce_unique_labels, 1, &op );
+	MPI_AllReduce( unique_labels, global_unique_labels, max_size, MPI_INT, op, MPI_COMM_WORLD );
+	
+	// update local classmap
+	classmap.clear();
+	int label, idx=0;
+	for ( int i=0; i<max_size; ++i ) {
+		label = global_unique_labels[i];
+		if ( label != -1 ) {
+			classmap.emplace( label, idx++ );
+		}
+	}
+
+	// format the local label set into a matrix based on global class map
+	Mat y = mlu::format_labels( labels, classmap );
+	cout << y;
 
         
     /* CLASSIFICATION MODEL INITIALIZATION */
