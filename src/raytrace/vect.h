@@ -161,7 +161,7 @@ bool RayIntersection(Ray * ray, Flt (*f)(Flt, Flt), Flt tstart, Flt tend, Vec B)
     Flt error = B[2]-(*f)(B[0],B[1]);
     if( isnan(error) ){
       cerr < "ERROR: intersection overflow\n";
-      error = copysign(LARGE_REPLACEMENT,error);
+      error = -copysign(LARGE_REPLACEMENT,error);
     }
     steps++;
 

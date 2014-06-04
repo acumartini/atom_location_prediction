@@ -15,8 +15,8 @@ using namespace std;
 #define p_C   (-0.128)
 #define p_k   (-0.824)
 #define p_D0  17.705
-//#define p_D2   0.0211
-//#define p_D4   0.0871
+//#define p_D2   -0.0211
+//#define p_D4   -0.0871
 #define p_D2   (0.0211*0.0211) //scetch
 #define p_D4   (0.0871*0.0871*0.0871*0.0871)
 #define p_Z(r) ((p_C*r*r)/(1.0+sqrt(1.0-(1.0+p_k)*p_C*p_C*r*r))+p_D0+p_D2*r*r+p_D4*r*r*r*r)
@@ -64,14 +64,18 @@ Flt image_plane(Flt x, Flt y){
 int main(){
 
   //#pragma omp parallel for
-  for(int i=-(WIDTH*DENSITY)/2;i<=(WIDTH*DENSITY)/2;i++){
+  //  for(int i=-(WIDTH*DENSITY)/2;i<=(WIDTH*DENSITY)/2;i++){
+  #define theta_range PI/5.0
+  #define dtheta theta_range/100.0
+  for(int i=-theta_range/(dtheta*2.0); i<theta_range/(dtheta*2.0); i++){
+
     Ray initial_ray;
     Ray output_ray;
 
     initial_ray.P[0]=0.0;
     initial_ray.P[1]=0.0;
     initial_ray.P[2]=0.0;
-    AngleToVec( 1.0, 0.0, ((float)i)*(1.0/DENSITY)/(10.0), initial_ray.D);
+    AngleToVec( 1.0, 0.0, ((float)i)*(dtheta), initial_ray.D);
 
     //create grid of rays pointing upward
     /*
