@@ -154,6 +154,9 @@ int main (int argc, char *argv[]) {
 	
 	// update local classmap
 	std::sort( global_unique_labels, global_unique_labels + max_size );
+	for ( int i=0; i<max_size; ++i ) {
+		printf( "part %d label %d\n", taskid, global_unique_labels[i] );
+	}
 	classmap.clear();
 	int labeltmp;
 	idx=0;
