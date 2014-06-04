@@ -27,6 +27,7 @@ typedef unsigned long ProbSize;
 // globla model variables
 ProbSize m, n; // numbers of instance and features
 ClassMap classmap; // a map of labels to label indices
+LayerSize numlabels;
 
 // MPI reduce ops
 void reduce_unique_labels ( int *, int *, int *, MPI_Datatype * );
@@ -65,10 +66,8 @@ void count_instances( std::string datafile ) {
 
 void count_features( std::string datafile, int taskid ) {
 	std::ifstream infile( datafile );
-    printf( "datafile = %s\n", datafile.c_str() );
 	std::string line;
 	std::getline( infile, line );
-    printf( "line = %s\n", line.c_str() );
     std::istringstream iss( line );
     std::vector<std::string> tokens{
     	std::istream_iterator<std::string>{iss},
@@ -105,9 +104,6 @@ int main (int argc, char *argv[]) {
 	std::string taskstr = std::to_string( taskid );
 	std::string datafile = "./data/data";
 	datafile += taskstr + "/train" + taskstr + ".tsv";
-    // datafile += "/train";
-    // datafile += std::to_string( taskid );
-    // datafile += ".tsv";
 
 	// determine number of instances
 	count_instances( datafile );
@@ -117,7 +113,7 @@ int main (int argc, char *argv[]) {
 
 
 	/* DATA INITIALIZATION */
-    m = 20;
+    m = 20; // TEMPORARY TESTING VALUE
     printf( "m = %lu n = %lu\n", m, n );
 	Mat X( m, n );
 	Vec labels( m );
@@ -126,14 +122,12 @@ int main (int argc, char *argv[]) {
 	for ( ProbSize i=0; i<m; ++i ) {
 		for ( ProbSize j=0; j<n; ++j ) {
 			data >> feat_val;
-            printf( "feat_val = %f\n", feat_val );
 			X(i,j) = feat_val;
 		}
 		data >> label;
-        printf( "label = %f\n", label );
 		labels[i] = label;
 	}
-    std::cout << X << "\n" << labels;
+    // std::cout << X << "\n" << labels << "\n";
 
 	/* FORMAT LABELS */
 	// get unique labels
@@ -171,10 +165,11 @@ int main (int argc, char *argv[]) {
 
 	// format the local label set into a matrix based on global class map
 	Mat y = mlu::format_labels( labels, classmap );
-    std::cout << labels;
-    printf( "classmap.size() = %d\n", classmap.size() );
-	std::cout << y;
+	numlabels = (LayerSize) classmap.size();
 
+
+	/* INIT LOCAL CLASSIFIER */
+	LogisticRegression clf( n, numlabels );
 
 	// initialize and communicate paramters
 	if (taskid == MASTER) {
