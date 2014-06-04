@@ -39,10 +39,12 @@ void count_instances( int taskid ) {
 	}
 }
 
-void count_features( int taskid ) {
+void count_features( std::string datadir, int taskid ) {
 	std::ifstream infile( datadir );
+    printf( "datadir = %s\n", datadir.c_str() );
 	std::string line;
 	std::getline( infile, line );
+    printf( "line = %s\n", line.c_str() );
     std::istringstream iss( line );
     std::vector<std::string> tokens{
     	std::istream_iterator<std::string>{iss},
@@ -77,14 +79,18 @@ int main (int argc, char *argv[]) {
 
 	/* DATA PREPROCESSING */
 	// define data directory for each node
-	std::string datadir = "/data/data";
+	std::string datadir = "./data/data";
 	datadir += std::to_string( taskid );
+    datadir += "/train";
+    datadir +=  std::to_string( taskid );
+    datadir += ".tsv";
+
 
 	// determine number of instances
 	count_instances( taskid );
 
 	// determine number of features
-	count_features( taskid );
+	count_features( datadir, taskid );
 
 
 	/* DATA INITIALIZATION */
