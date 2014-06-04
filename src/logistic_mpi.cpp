@@ -14,6 +14,7 @@
 
 #include "mpi.h"
 #include "logistic.h"
+#include "mlutils.h"
 
 #define EIGEN_DEFAULT_TO_ROW_MAJOR
 #include "Eigen/Core"
@@ -35,7 +36,7 @@ void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dt
 {
 	int label;
     ClassSet in, out;
-    for ( int i=0; i<&len; ++i ) {
+    for ( int i=0; i<*len; ++i ) {
     	label = invec[i];
     	if ( label != -1 ) { in.insert( label ); }
     }
@@ -44,12 +45,12 @@ void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dt
     }
     int idx = 0;
     for ( auto& elem : in ) {
-    	out[i++] = elem;
+    	out[idx++] = elem;
     }
 }
 
 
-void count_instances( int taskid ) {
+void count_instances( std::string datafile ) {
 	struct dirent *pDirent;
 	DIR *pDir;
 	m = 0;
@@ -110,7 +111,7 @@ int main (int argc, char *argv[]) {
     // datafile += ".tsv";
 
 	// determine number of instances
-	count_instances( taskid );
+	count_instances( datafile );
 
 	// determine number of features
 	count_features( datafile, taskid );
@@ -155,17 +156,18 @@ int main (int argc, char *argv[]) {
 	
 	// update local classmap
 	classmap.clear();
-	int label, idx=0;
+	int labeltmp;
+	idx=0;
 	for ( int i=0; i<max_size; ++i ) {
-		label = global_unique_labels[i];
-		if ( label != -1 ) {
-			classmap.emplace( label, idx++ );
+		labeltmp = global_unique_labels[i];
+		if ( labeltmp != -1 ) {
+			classmap.emplace( labeltmp, idx++ );
 		}
 	}
 
 	// format the local label set into a matrix based on global class map
 	Mat y = mlu::format_labels( labels, classmap );
-	cout << y;
+	std::cout << y;
 
         
     /* CLASSIFICATION MODEL INITIALIZATION */
