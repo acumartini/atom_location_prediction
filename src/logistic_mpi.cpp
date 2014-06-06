@@ -135,9 +135,9 @@ int main (int argc, char *argv[]) {
 
 	// partition data based on taskid
 	size_t div = datavec.size() / numtasks;
-	ProbSize limit = ( taskid == numtasks - 1 ) ? limit = m : div * ( taskid + 1 );
+	ProbSize limit = ( taskid == numtasks - 1 ) ? m : div * ( taskid + 1 );
 	m = limit - div * taskid;
-	printf( "m %lu n %lu\n", m, n );
+	//printf( "m %lu n %lu\n", m, n );
 
     // danamically allocate data
 	Mat X( m, n );
@@ -145,14 +145,17 @@ int main (int argc, char *argv[]) {
 
     // load data partition
     double feat_val, label;
-	for ( ProbSize i = taskid * div; i < limit; ++i ) {
-	    std::ifstream data( datavec[i] );
+    ProbSize i = 0;
+	for ( ProbSize idx = taskid * div; idx < limit; ++idx ) {
+	    std::ifstream data( datavec[idx] );
 		for ( ProbSize j=0; j<n; ++j ) {
 			data >> feat_val;
+            //printf( "taskid %d i %lu j %lu\n", taskid, i, j );
 			X(i,j) = feat_val;
 		}
 		data >> label;
 		labels[i] = label;
+        i++;
 	}
     std::cout << X << "\n" << labels << "\n";
 
