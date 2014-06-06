@@ -132,22 +132,25 @@ int main (int argc, char *argv[]) {
 	/* DATA INITIALIZATION */
 	// randomize instance 
 	std::random_shuffle ( datavec.begin(), datavec.end() );
-	for ( auto& s : datavec ) {
-		printf( "datafile = %s\n", s.c_str() );
-	}
-	assert( false );
-
-	// danaically allocate data
-	Mat X( m, n );
-	Vec labels( m );
 
 	// partition data based on taskid
 	size_t div = datavec.size() / numtasks;
-	ProbSize limit = ( taskid == numtasks - 1 ? div * ( taskid + 1 ) : m;
-	double feat_val, label;
+	ProbSize limit;
+    if ( taskid == numtasks - 1 ) {
+        limit = m;
+    } else {
+        limit = div * ( taskid + 1 );
+    }
+	m = limit - div * taskid;
 
+    // danamically allocate data
+	Mat X( m, n );
+	Vec labels( m );
+
+    // load data partition
+    double feat_val, label;
 	for ( ProbSize i = taskid * div; i < limit; ++i ) {
-	    std::ifstream data( datafile );
+	    std::ifstream data( datavec[i] );
 		for ( ProbSize j=0; j<n; ++j ) {
 			data >> feat_val;
 			X(i,j) = feat_val;
