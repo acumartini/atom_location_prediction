@@ -135,13 +135,9 @@ int main (int argc, char *argv[]) {
 
 	// partition data based on taskid
 	size_t div = datavec.size() / numtasks;
-	ProbSize limit;
-    if ( taskid == numtasks - 1 ) {
-        limit = m;
-    } else {
-        limit = div * ( taskid + 1 );
-    }
+	ProbSize limit = ( taskid == numtasks - 1 ) ? limit = m : div * ( taskid + 1 );
 	m = limit - div * taskid;
+	printf( "m %lu n %lu\n", m, n );
 
     // danamically allocate data
 	Mat X( m, n );
