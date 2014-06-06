@@ -63,7 +63,7 @@ void count_instances( std::string datadir, DataVec& datavec ) {
 
 	if (pDir != NULL) {
 	    while ( ( pDirent = readdir( pDir ) ) != NULL) {
-	    	filename = pDirent.d_name;
+	    	filename = pDirent->d_name;
 	    	if ( filename != "." && filename != ".." ) {
 	    		datavec.push_back( filename );
 		    	m++; 
@@ -74,7 +74,7 @@ void count_instances( std::string datadir, DataVec& datavec ) {
 }
 
 void count_features( std::string datadir, int taskid ) {
-	std::ifstream infile( datadir + "0.tsv" );
+	std::ifstream infile( datadir + "/0.tsv" );
 	std::string line;
 	std::getline( infile, line );
     std::istringstream iss( line );
@@ -91,7 +91,7 @@ int main (int argc, char *argv[]) {
 	bool output = false;
 	std::string datadir;
 	std::string output_file;
-	if ( argc > 3 || argcv < 2 ) {
+	if ( argc > 3 || argc < 2 ) {
 		printf( " Usage: ./logistic_mpi <data_directory> <batch_size> <model_output_file");
 		exit( 0 );
 	} else if ( argc == 4 ) {
@@ -135,8 +135,10 @@ int main (int argc, char *argv[]) {
 	Mat X( m, n );
 	Vec labels( m );
 	double feat_val, label;
-	std::ifstream data( datafile );
 	for ( ProbSize i=0; i<m; ++i ) {
+        std::string datafile( datadir + "/" + std::to_string( i ) + ".tsv" );
+        printf( "datafile = %s\n", datafile.c_str() );
+	    std::ifstream data( datafile );
 		for ( ProbSize j=0; j<n; ++j ) {
 			data >> feat_val;
 			X(i,j) = feat_val;
