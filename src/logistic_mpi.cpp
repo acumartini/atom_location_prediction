@@ -65,7 +65,7 @@ void count_instances( std::string datadir, DataVec& datavec ) {
 	    while ( ( pDirent = readdir( pDir ) ) != NULL) {
 	    	filename = pDirent->d_name;
 	    	if ( filename != "." && filename != ".." ) {
-	    		datavec.push_back( filename );
+	    		datavec.push_back( datadir + "/" + filename );
 		    	m++; 
 	    	}
 	   	}
@@ -141,10 +141,12 @@ int main (int argc, char *argv[]) {
 	Mat X( m, n );
 	Vec labels( m );
 
-
+	// partition data based on taskid
+	size_t div = datavec.size() / numtasks;
+	ProbSize limit = ( taskid == numtasks - 1 ? div * ( taskid + 1 ) : m;
 	double feat_val, label;
-	for ( ProbSize i=0; i<m; ++i ) {
-        std::string datafile( datadir + "/" + std::to_string( i ) + ".tsv" );
+
+	for ( ProbSize i = taskid * div; i < limit; ++i ) {
 	    std::ifstream data( datafile );
 		for ( ProbSize j=0; j<n; ++j ) {
 			data >> feat_val;
@@ -153,7 +155,7 @@ int main (int argc, char *argv[]) {
 		data >> label;
 		labels[i] = label;
 	}
-    //std::cout << X << "\n" << labels << "\n";
+    std::cout << X << "\n" << labels << "\n";
 
 	/* FORMAT LABELS */
 	// get unique labels
