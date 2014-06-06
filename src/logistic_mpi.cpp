@@ -22,7 +22,6 @@ using namespace Eigen;
 
 #define MASTER 0
 
-typedef unsigned long ProbSize;
 typedef std::vector<std::string> DataVec;
 
 
@@ -208,7 +207,7 @@ int main (int argc, char *argv[]) {
 
 
 	/* INIT LOCAL CLASSIFIER */
-	LogisticRegression clf( n, numlabels );
+	LogisticRegression clf( n, numlabels, true );
 
 	// initialize and communicate paramters
 	if (taskid == MASTER) {
@@ -240,12 +239,13 @@ int main (int argc, char *argv[]) {
 			op,
 			MPI_COMM_WORLD
 		);
+		clf.set_delta( delta_update );
 
-		// normalize gradient update
-		delta_update.noalias() /= num_inst;
+		// normalize + regularize gradient update
+		clf.normalize_gradient( num_inst );
+		clf.regularize_gradient( num_inst );
 
 		// update clf parameters
-		clf.set_delta( delta_update );
 		if ( clf.converged( grad_mag ) ) { break; }
 		if ( taskid == MASTER ) {
 			printf( "%d : %lf\n", i, grad_mag );

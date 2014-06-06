@@ -14,6 +14,7 @@
 #include "Eigen/Core"
 
 
+typedef unsigned long ProbSize;
 typedef unsigned int LayerSize;
 typedef Eigen::MatrixXd Mat;
 typedef Eigen::Map<Mat> MatMap;
@@ -97,9 +98,26 @@ public:
 			dW = X.transpose() * error;
 			dW.noalias() += ( W * lambda ) / X.rows(); // apply regularization
 			db = error.colwise().mean();
+			delta.array() /= X.rows();
 		}
 
 		updated = true;  // now safe to access gradient update data
+	}
+
+	/*
+	 * Called if using distributed model to normalize gradient based on total number
+	 * of instances.
+	 */
+	void normalize_gradient( const ProbSize& m ) {
+		delta.array() /= m;
+	}
+
+	/*
+	 * Called if using distributed model to regularize gradient based on total number
+	 * of instances.
+	 */
+	void regularize_gradient( const ProbSize& m ) {
+		dW.noalias() += ( W * lambda ) / m; // do not regularize bias updates
 	}
 
 	Mat softmax ( Mat z ) {
