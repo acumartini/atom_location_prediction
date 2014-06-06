@@ -130,14 +130,21 @@ int main (int argc, char *argv[]) {
 
 
 	/* DATA INITIALIZATION */
+	// randomize instance 
 	std::random_shuffle ( datavec.begin(), datavec.end() );
-    printf( "m = %lu n = %lu\n", m, n );
+	for ( auto& s : datavec ) {
+		printf( "datafile = %s\n", s.c_str() );
+	}
+	assert( false );
+
+	// danaically allocate data
 	Mat X( m, n );
 	Vec labels( m );
+
+
 	double feat_val, label;
 	for ( ProbSize i=0; i<m; ++i ) {
         std::string datafile( datadir + "/" + std::to_string( i ) + ".tsv" );
-        printf( "datafile = %s\n", datafile.c_str() );
 	    std::ifstream data( datafile );
 		for ( ProbSize j=0; j<n; ++j ) {
 			data >> feat_val;
@@ -146,7 +153,7 @@ int main (int argc, char *argv[]) {
 		data >> label;
 		labels[i] = label;
 	}
-    std::cout << X << "\n" << labels << "\n";
+    //std::cout << X << "\n" << labels << "\n";
 
 	/* FORMAT LABELS */
 	// get unique labels
