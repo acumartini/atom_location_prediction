@@ -23,9 +23,12 @@ using namespace Eigen;
 #define MASTER 0
 
 typedef unsigned long ProbSize;
+typedef std::vector<std::string> DataVec;
 
-// globla model variables
+
+// global model variables
 ProbSize m, n; // numbers of instance and features
+size_t begin, end; // where to index the datavec for each partition
 ClassMap classmap; // a map of labels to label indices
 LayerSize numlabels;
 
@@ -51,15 +54,21 @@ void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dt
 }
 
 
-void count_instances( std::string datadir ) {
+void count_instances( std::string datadir, DataVec& datavec ) {
 	struct dirent *pDirent;
 	DIR *pDir;
 	m = 0;
+	std::string filename;
 	pDir = opendir( datadir.c_str() );
 
 	if (pDir != NULL) {
-	    while ( ( pDirent = readdir( pDir ) ) != NULL) { m++; }
-		m -= 2; // ignore "." and ".." directory reads
+	    while ( ( pDirent = readdir( pDir ) ) != NULL) {
+	    	filename = pDirent.d_name;
+	    	if ( filename != "." && filename != ".." ) {
+	    		datavec.push_back( filename );
+		    	m++; 
+	    	}
+	   	}
 	    closedir (pDir);
 	}
 }
@@ -113,14 +122,15 @@ int main (int argc, char *argv[]) {
 
 	/* DATA PREPROCESSING */
 	// determine number of instances
-	count_instances( datadir );
+	DataVec datavec;
+	count_instances( datadir, datavec );
 
 	// determine number of features
 	count_features( datadir, taskid );
 
 
 	/* DATA INITIALIZATION */
-    m = 20; // TEMPORARY TESTING VALUE
+	std::random_shuffle ( datavec.begin(), datavec.end() );
     printf( "m = %lu n = %lu\n", m, n );
 	Mat X( m, n );
 	Vec labels( m );
