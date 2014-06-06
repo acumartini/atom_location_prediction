@@ -88,7 +88,7 @@ public:
 		Mat probas = softmax( (X * W).rowwise() + b ); // compute P( y | X )
 		Mat error = probas - y; // compute the error
 
-		// check if the algorithms is used in a distributed setting and only normalize
+		// check if the algorithm is used in a distributed setting and only normalize
 		// the gradient if running on a single process
 		if ( distributed ) { 
 			dW = X.transpose() * error;
@@ -113,13 +113,21 @@ public:
 		if ( theta_update.size() != theta.size() ) {
 			throw LogisticRegressionError( INVALID_THETA_UPDATE );
 		}
-		theta << theta_update; }
+		theta << theta_update;
+	}
 
 	/*
 	 * Allows the client to set internal optimization variables.
 	 */
 	void set_parameters ( float a, float l, float e ) {
 		alpha = a; lambda = l; epsilon = e;
+	}
+
+	/*
+	 * Returns the size of the delta vector.
+	 */
+	int get_paramter_size () const {
+		return theta.size();
 	}
 
 	/*
@@ -131,6 +139,16 @@ public:
 			return delta; 
 		}
 	}
+
+	/*
+	 * Allows the client to set the delta parameters 
+	 */
+	void set_delta ( const Vec& delta_update ) { 
+		if ( delta_update.size() != theta.size() ) {
+			throw LogisticRegressionError( INVALID_DELTA_UPDATE );
+		}
+		delta << delta_update;
+	}	
 
 	/*
 	 * Returns true if the magnitude of the gradient is less than or equal to the convergence

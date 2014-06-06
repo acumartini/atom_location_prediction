@@ -27,14 +27,15 @@ typedef std::vector<std::string> DataVec;
 
 
 // global model variables
-ProbSize m, n; // numbers of instance and features
+ProbSize num_inst, m, n; // numbers of instance and features
 size_t begin, end; // where to index the datavec for each partition
 ClassMap classmap; // a map of labels to label indices
 LayerSize numlabels;
+double *delta_data;
 
 // MPI reduce ops
 void reduce_unique_labels ( int *, int *, int *, MPI_Datatype * );
-// void reduce_gradient_update ( int *, int *, int *, MPI_Datatype * );
+void reduce_gradient_update ( double *, double *, int *, MPI_Datatype * );
  
 void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dtype )
 {
@@ -53,11 +54,17 @@ void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dt
     }
 }
 
+void reduce_gradient_update( double *delta_in, double *delta_out, int *len, MPI_Datatype *dtype ) {
+	for ( int i=0; i<*len; ++i ) {
+		delta_out[i] = delta_in[i] + delta_data[i];
+	}
+}
+
 
 void count_instances( std::string datadir, DataVec& datavec ) {
 	struct dirent *pDirent;
 	DIR *pDir;
-	m = 0;
+	num_inst = 0;
 	std::string filename;
 	pDir = opendir( datadir.c_str() );
 
@@ -66,7 +73,7 @@ void count_instances( std::string datadir, DataVec& datavec ) {
 	    	filename = pDirent->d_name;
 	    	if ( filename != "." && filename != ".." ) {
 	    		datavec.push_back( datadir + "/" + filename );
-		    	m++; 
+		    	num_inst++; 
 	    	}
 	   	}
 	    closedir (pDir);
@@ -118,6 +125,7 @@ int main (int argc, char *argv[]) {
 	MPI_Comm_size(MPI_COMM_WORLD, &numtasks);
 	MPI_Comm_rank(MPI_COMM_WORLD,&taskid);
 	MPI_Get_processor_name(hostname, &len);
+	MPI_Op op;
 
 
 	/* DATA PREPROCESSING */
@@ -135,7 +143,7 @@ int main (int argc, char *argv[]) {
 
 	// partition data based on taskid
 	size_t div = datavec.size() / numtasks;
-	ProbSize limit = ( taskid == numtasks - 1 ) ? m : div * ( taskid + 1 );
+	ProbSize limit = ( taskid == numtasks - 1 ) ? num_inst : div * ( taskid + 1 );
 	m = limit - div * taskid;
 	//printf( "m %lu n %lu\n", m, n );
 
@@ -178,9 +186,9 @@ int main (int argc, char *argv[]) {
 		unique_labels[idx++] = kv.first;
 	}
 	int global_unique_labels[max_size];
-	MPI_Op op;
 	MPI_Op_create( (MPI_User_function *)reduce_unique_labels, 1, &op );
 	MPI_Allreduce( unique_labels, global_unique_labels, max_size, MPI_INT, op, MPI_COMM_WORLD );
+	MPI_Op_free( &op );
 	
 	// update local classmap
 	std::sort( global_unique_labels, global_unique_labels + max_size );
@@ -213,7 +221,39 @@ int main (int argc, char *argv[]) {
 
 
 	/* OPTIMIZATION */
+	double grad_mag;
+	int delta_size = clf.get_parameter_size();
+	Vec::Zero delta_update( delta_size );
+	MPI_Op_create( (MPI_User_function *)reduce_gradient_update, 1, &op );
 
+	for ( int i=0; i<100; ++i ) {
+		// compute gradient update
+		clf.compute_gradient( X, y )
+		delta_data = clf.get_delta().data();
+
+		// sum updates across all partitions
+		MPI_Allreduce( 
+			delta_data,
+			delta_update.data(),
+			delta_size,
+			MPI_DOUBLE,
+			op,
+			MPI_COMM_WORLD
+		);
+
+		// normalize gradient update
+		delta_update.noalias() /= num_inst;
+
+		// update clf parameters
+		clf.set_delta( delta_update );
+		if ( clf.converged( grad_mag ) ) { break; }
+		if ( taskid == MASTER ) {
+			printf( "%d : %lf\n", i, grad_mag );
+		}
+		clf.update_theta();
+	}
+
+	MPI_Op_free( &op );
 
 
 	// perform prediction and model storage tasks on a single node
