@@ -189,17 +189,18 @@ int main (int argc, char *argv[]) {
     	MPI_Op_create( (MPI_User_function *)reduce_X_min, 1, &op );
     	Vec X_min_tmp = X.colwise().minCoeff();
     	X_min_data = X_min_tmp.data();
-		//Vec X_min = Vec( X_min_tmp.size() );
-		MPI_Allreduce( X_min_tmp.data(), X_min_ptr, X_min_tmp.size(), MPI_DOUBLE, op, MPI_COMM_WORLD );
+    	Vec X_min = Vec( X_min_tmp.size() );
+		MPI_Allreduce( X_min_tmp.data(), X_min.data(), X_min_tmp.size(), MPI_DOUBLE, op, MPI_COMM_WORLD );
 		MPI_Op_free( &op );
-		VecMap X_min = VecMap( X_min_ptr, X_min_tmp.size() );
+		// VecMap X_min = VecMap( X_min_ptr, X_min_tmp.size() );
 
     	MPI_Op_create( (MPI_User_function *)reduce_X_max, 1, &op );
 		Vec X_max_tmp = X.colwise().maxCoeff();
 		X_max_data = X_max_tmp.data();
-		MPI_Allreduce( X_max_tmp.data(), X_max_ptr, X_max_tmp.size(), MPI_DOUBLE, op, MPI_COMM_WORLD );
+		Vec X_max = Vec( X_max_tmp.size() );
+		MPI_Allreduce( X_max_tmp.data(), X_max.data(), X_max_tmp.size(), MPI_DOUBLE, op, MPI_COMM_WORLD );
 		MPI_Op_free( &op );
-		VecMap X_max = VecMap( X_max_ptr, X_max_tmp.size() );
+		// VecMap X_max = VecMap( X_max_ptr, X_max_tmp.size() );
 
 		std::cout << X_min << "\n\n";
 		std::cout << X_max << "\n\n";
