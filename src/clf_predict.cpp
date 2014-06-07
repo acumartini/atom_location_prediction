@@ -10,7 +10,6 @@
 #include <iterator>
 #include <vector>
 
-#include "mpi.h"
 #include "logistic.h"
 #include "mlutils.h"
 
@@ -29,7 +28,7 @@ typedef std::vector<std::string> DataVec;
 
 int main (int argc, char *argv[]) {
     // handle cmd args
-	std::string datadir;
+	std::string datadir, model_file;
 
 	if ( argc != 3 ) {
 		printf( "Usage: ./logistic_mpi <data_directory> <model_file>\n" );
@@ -56,9 +55,8 @@ int main (int argc, char *argv[]) {
 
     // load testing data
     double feat_val, label;
-    ProbSize i = 0;
-	for ( ProbSize idx = taskid * div; idx < limit; ++idx ) {
-	    std::ifstream data( datavec[idx] );
+	for ( ProbSize i=0; i<m; ++i ) {
+	    std::ifstream data( datavec[i] );
 		for ( ProbSize j=0; j<n; ++j ) {
 			data >> feat_val;
 			X(i,j) = feat_val;
@@ -70,7 +68,7 @@ int main (int argc, char *argv[]) {
 
     // perform feature scaling (optional)
     if ( scaling ) {
-		mlu::scale_features( X_test, 1, 0 );
+		mlu::scale_features( X, 1, 0 );
     }
 
 
@@ -102,9 +100,9 @@ int main (int argc, char *argv[]) {
 
     /* PREDICT */
    	Mat probas = clf.predict_proba( X );
-	cout << probas << endl;
+	std::cout << probas << std::endl;
 	Vec pred = clf.predict( X );
-	cout << pred << endl;
+	std::cout << pred << std::endl;
 	
 	Mat cm = mlu::confusion_matrix( y, pred );
 	std::cout << cm << std::endl;
