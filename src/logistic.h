@@ -148,8 +148,15 @@ public:
 	/*
 	 * Returns the size of the delta vector.
 	 */
-	int get_parameter_size () const {
+	int get_theta_size () const {
 		return theta.size();
+	}
+
+	/*
+	 * Returns the current theta vector.
+	 */
+	Vec& get_theta () { 
+		return theta;
 	}
 
 	/*

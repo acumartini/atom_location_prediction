@@ -111,9 +111,9 @@ void count_features( std::string datadir, int taskid ) {
 int main (int argc, char *argv[]) {
     // handle cmd args
 	int batch_size, maxiter;
-	bool output = false;
 	std::string datadir;
 	std::string output_file;
+
 	if ( argc > 5 || argc < 2 ) {
 		printf( "Usage: ./logistic_mpi <data_directory> <batch_size> "
 				"<max_iterations> <model_output_file>\n");
@@ -217,7 +217,7 @@ int main (int argc, char *argv[]) {
 		// scale features using global min and max
 		mlu::scale_features( X, X_min, X_max, 1, 0 );
 
-		std::cout << X << "\n" << labels << "\n";
+		std::cout << X << "\n" << y << "\n";
     }
 
 
@@ -276,7 +276,7 @@ int main (int argc, char *argv[]) {
 
 	/* OPTIMIZATION */
 	double grad_mag;
-	int delta_size = clf.get_parameter_size();
+	int delta_size = clf.get_theta_size();
 	Vec delta_update = Vec::Zero( delta_size );
 
 	MPI_Op_create( (MPI_User_function *)reduce_gradient_update, 1, &op );
@@ -313,17 +313,19 @@ int main (int argc, char *argv[]) {
 
 	// perform prediction and model storage tasks on a single node
 	if (taskid == MASTER) {
-		/* PREDICTION */
-
-		// predict on validation set
-
-		// output prediction results
-
-
 		/* MODEL STORAGE */
+		FILE *output;
+		output = fopen ( output_file, "w" );
+		size_t idx;
+		Vec theta = clf.get_theta();
 
-		// store parameters
+		fprintf( output, "%lu\n", theta.size() );
+		for ( idx=0; idx<theta_size-1; ++idx ) {
+			fprint( output, "%lf\t", theta[idx] );
+		}
+		fprintf( output, "%lf\n", theta[idx] );
 	} 
 
 	MPI_Finalize();
+	return 0;
 }
