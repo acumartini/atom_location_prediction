@@ -77,37 +77,6 @@ void reduce_X_max( double *X_max_in, double *X_max_out, int *len, MPI_Datatype *
 }
 
 
-void count_instances( std::string datadir, DataVec& datavec ) {
-	struct dirent *pDirent;
-	DIR *pDir;
-	num_inst = 0;
-	std::string filename;
-	pDir = opendir( datadir.c_str() );
-
-	if (pDir != NULL) {
-	    while ( ( pDirent = readdir( pDir ) ) != NULL) {
-	    	filename = pDirent->d_name;
-	    	if ( filename != "." && filename != ".." ) {
-	    		datavec.push_back( datadir + "/" + filename );
-		    	num_inst++; 
-	    	}
-	   	}
-	    closedir (pDir);
-	}
-}
-
-void count_features( std::string datadir, int taskid ) {
-	std::ifstream infile( datadir + "/0.tsv" );
-	std::string line;
-	std::getline( infile, line );
-    std::istringstream iss( line );
-    std::vector<std::string> tokens{
-    	std::istream_iterator<std::string>{iss},
-    	std::istream_iterator<std::string>{}
-    };
-    n = tokens.size() - 1; // -1 for label
-}
-
 int main (int argc, char *argv[]) {
     // handle cmd args
 	int batch_size, maxiter;
@@ -156,10 +125,10 @@ int main (int argc, char *argv[]) {
 	/* DATA PREPROCESSING */
 	// determine number of instances
 	DataVec datavec;
-	count_instances( datadir, datavec );
+	mlu::count_instances( datadir, datavec, num_inst );
 
 	// determine number of features
-	count_features( datadir, taskid );
+	mlu::count_features( datadir, taskid, n );
 
 
 	/* DATA INITIALIZATION */
@@ -170,7 +139,6 @@ int main (int argc, char *argv[]) {
 	size_t div = datavec.size() / numtasks;
 	ProbSize limit = ( taskid == numtasks - 1 ) ? num_inst : div * ( taskid + 1 );
 	m = limit - div * taskid;
-	//printf( "m %lu n %lu\n", m, n );
 
     // danamically allocate data
 	Mat X( m, n );
@@ -183,14 +151,12 @@ int main (int argc, char *argv[]) {
 	    std::ifstream data( datavec[idx] );
 		for ( ProbSize j=0; j<n; ++j ) {
 			data >> feat_val;
-            //printf( "taskid %d i %lu j %lu\n", taskid, i, j );
 			X(i,j) = feat_val;
 		}
 		data >> label;
 		labels[i] = label;
         i++;
 	}
-    // std::cout << X << "\n" << labels << "\n";
 
     // perform feature scaling (optional)
     if ( scaling ) {
@@ -210,13 +176,8 @@ int main (int argc, char *argv[]) {
 		MPI_Allreduce( X_max_tmp.data(), X_max.data(), X_max_tmp.size(), MPI_DOUBLE, op, MPI_COMM_WORLD );
 		MPI_Op_free( &op );
 
-		// std::cout << "\n" << X_min << "\n";
-		// std::cout << X_max << "\n\n";
-
 		// scale features using global min and max
 		mlu::scale_features( X, X_min, X_max, 1, 0 );
-
-		// std::cout << X << "\n" << y << "\n";
     }
 
 
@@ -264,13 +225,13 @@ int main (int argc, char *argv[]) {
 	LogisticRegression clf( n, numlabels, true );
 
 	// initialize and communicate paramters
-	if (taskid == MASTER) {
-		// init and send parameters
+	// if (taskid == MASTER) {
+	// 	// init and send parameters
 
-	} else {
-		// recieve network parameters and update local classifier
+	// } else {
+	// 	// recieve network parameters and update local classifier
 
-	}
+	// }
 
 
 	/* OPTIMIZATION */
@@ -283,7 +244,6 @@ int main (int argc, char *argv[]) {
 		// compute gradient update
 		clf.compute_gradient( X, y );
 		delta_data = clf.get_delta().data();
-        // std::cout << "TASK " << taskid << " DELTA " <<  clf.get_delta() << "\n\n";
 
 		// sum updates across all partitions
 		MPI_Allreduce( 
@@ -310,9 +270,8 @@ int main (int argc, char *argv[]) {
 	MPI_Op_free( &op );
 
 
-	// perform prediction and model storage tasks on a single node
+	/* MODEL STORAGE */
 	if (taskid == MASTER) {
-		/* MODEL STORAGE */
 		FILE *output;
 		output = fopen ( output_file.c_str(), "w" );
 		size_t idx;
