@@ -60,10 +60,12 @@ int main (int argc, char *argv[]) {
 	    std::ifstream data( datavec[i] );
 		for ( ProbSize j=0; j<n; ++j ) {
 			data >> feat_val;
+			printf( "feat_val %lf\n", feat_val );
 			X(i,j) = feat_val;
 		}
 		data >> label;
 		labels[i] = label;
+		printf( "label %lf\n" label );
         i++;
 	}
 	std::cout << X << "\n" << labels << "\n";
