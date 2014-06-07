@@ -72,7 +72,7 @@ void reduce_X_min( double *X_min_in, double *X_min_out, int *len, MPI_Datatype *
 
 void reduce_X_max( double *X_max_in, double *X_max_out, int *len, MPI_Datatype *dtype ) {
 	for ( int i=0; i<*len; ++i ) {
-		X_max_out[i] = std::min( X_max_in[i], X_max_data[i] );
+		X_max_out[i] = std::max( X_max_in[i], X_max_data[i] );
 	}
 }
 
