@@ -57,34 +57,27 @@ int main (int argc, char *argv[]) {
     // load testing data
     double feat_val, label;
 	for ( ProbSize i=0; i<m; ++i ) {
-        //printf( "%s\n", datavec[i].c_str() );
         std::ifstream data( datavec[i] );
 		for ( ProbSize j=0; j<n; ++j ) {
 			data >> feat_val;
-			//printf( "feat_val %lf\n", feat_val );
 			X(i,j) = feat_val;
 		}
 		data >> label;
 		labels[i] = label;
 		//printf( "label %lf\n", label );
 	}
-	//std::cout << X << "\n" << labels << "\n";
 
     // perform feature scaling (optional)
     if ( scaling ) {
 		mlu::scale_features( X, 1, 0 );
     }
-	std::cout << X << "\n";
+	// std::cout << X << "\n";
 
 	/* FORMAT LABELS */
 	// format the local label set into a matrix based on global class map
 	mlu::get_unique_labels( labels, classmap );
 	Mat y = mlu::format_labels( labels, classmap );
 	numlabels = (LayerSize) classmap.size();
-    std::cout << y << "\n";
-    for ( auto& kv : classmap ) {
-    	printf( "k %lf v %d\n", kv.first, kv.second );
-    }
 
 	/* INIT LOCAL CLASSIFIER */
 	LogisticRegression clf( n, numlabels );
@@ -104,7 +97,7 @@ int main (int argc, char *argv[]) {
     	model >> theta[i];
     }
     clf.set_theta( theta );
-    std::cout << clf.get_theta() << "\n";
+    // std::cout << clf.get_theta() << "\n";
 
 
     /* PREDICT */

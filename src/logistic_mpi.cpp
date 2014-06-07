@@ -3,7 +3,6 @@
 #include <iostream>
 #include <limits.h>
 #include <string>
-#include <dirent.h>
 #include <sstream>
 #include <fstream>
 #include <iostream>
@@ -31,8 +30,9 @@ size_t begin, end; // where to index the datavec for each partition
 ClassMap classmap; // a map of labels to label indices
 LayerSize numlabels;
 double *delta_data;
-bool scaling = true;
 double *X_min_ptr, *X_max_ptr, *X_min_data, *X_max_data;
+bool scaling = true;
+
 
 // MPI reduce ops
 void reduce_unique_labels ( int *, int *, int *, MPI_Datatype * );
@@ -97,17 +97,17 @@ int main (int argc, char *argv[]) {
 		datadir = argv[1];
 		batch_size = atoi( argv[2] ); // mini-batch processing
 		maxiter = atoi( argv[3] );
-		output_file = "clf.model";
+		output_file = "LR.model";
 	} else if ( argc == 4 ) {
 		datadir = argv[1];
 		batch_size = atoi( argv[2] ); // mini-batch processing
 		maxiter = 100;
-		output_file = "clf.model";
+		output_file = "LR.model";
 	} else {
 		datadir = argv[1];
 		batch_size = INT_MIN; // batch processing
 		maxiter = 100;
-		output_file = "clf.model";
+		output_file = "LR.model";
 	}
 
 	// initialize/populate mpi specific vars local to each node
@@ -222,7 +222,7 @@ int main (int argc, char *argv[]) {
 
 
 	/* INIT LOCAL CLASSIFIER */
-	LogisticRegression clf( n, numlabels, true );
+	LogisticRegression LR_layer( n, numlabels, true );
 
 	// initialize and communicate paramters
 	// if (taskid == MASTER) {
@@ -236,14 +236,14 @@ int main (int argc, char *argv[]) {
 
 	/* OPTIMIZATION */
 	double grad_mag;
-	int delta_size = clf.get_theta_size();
+	int delta_size = LR_layer.get_theta_size();
 	Vec delta_update = Vec::Zero( delta_size );
 
 	MPI_Op_create( (MPI_User_function *)reduce_gradient_update, 1, &op );
 	for ( int i=0; i<maxiter; ++i ) {
 		// compute gradient update
-		clf.compute_gradient( X, y );
-		delta_data = clf.get_delta().data();
+		LR_layer.compute_gradient( X, y );
+		delta_data = LR_layer.get_delta().data();
 
 		// sum updates across all partitions
 		MPI_Allreduce( 
@@ -254,18 +254,18 @@ int main (int argc, char *argv[]) {
 			op,
 			MPI_COMM_WORLD
 		);
-		clf.set_delta( delta_update );
+		LR_layer.set_delta( delta_update );
 
 		// normalize + regularize gradient update
-		clf.normalize_gradient( num_inst );
-		clf.regularize_gradient( num_inst );
+		LR_layer.normalize_gradient( num_inst );
+		LR_layer.regularize_gradient( num_inst );
 
-		// update clf parameters
-		if ( clf.converged( grad_mag ) ) { break; }
+		// update LR_layer parameters
+		if ( LR_layer.converged( grad_mag ) ) { break; }
 		if ( taskid == MASTER ) {
 			printf( "%d : %lf\n", i+1, grad_mag );
 		}
-		clf.update_theta();
+		LR_layer.update_theta();
 	}
 	MPI_Op_free( &op );
 
@@ -275,7 +275,7 @@ int main (int argc, char *argv[]) {
 		FILE *output;
 		output = fopen ( output_file.c_str(), "w" );
 		size_t idx;
-		Vec theta = clf.get_theta();
+		Vec theta = LR_layer.get_theta();
 
 		fprintf( output, "%lu\n", theta.size() );
 		for ( idx=0; idx<theta.size()-1; ++idx ) {
