@@ -124,7 +124,6 @@ int main (int argc, char *argv[]) {
 		batch_size = atoi( argv[2] ); // mini-batch processing
 		maxiter = atoi( argv[3] );
 		output_file = argv[4];
-		output = true;
 	} else if ( argc == 4 ) {
 		datadir = argv[1];
 		batch_size = atoi( argv[2] ); // mini-batch processing
