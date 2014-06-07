@@ -42,7 +42,7 @@ namespace mlu {
 		}
 	}
 
-	void count_features( std::string datadir, int taskid, ProbSize& n ) {
+	void count_features( std::string datadir, ProbSize& n ) {
 		std::ifstream infile( datadir + "/0.tsv" );
 		std::string line;
 		std::getline( infile, line );
