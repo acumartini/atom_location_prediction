@@ -95,7 +95,7 @@ int main (int argc, char *argv[]) {
     for ( int i=0; i<num_params; ++i ) {
     	model >> theta[i];
     }
-    std::cout << theta.get_theta() << "\n";
+    std::cout << clf.get_theta() << "\n";
 
 
     /* PREDICT */
