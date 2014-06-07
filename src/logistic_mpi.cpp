@@ -122,13 +122,13 @@ int main (int argc, char *argv[]) {
 	} else if ( argc == 5 ) {
 		datadir = argv[1];
 		batch_size = atoi( argv[2] ); // mini-batch processing
-		max_iter = atoi( argv[3] );
+		maxiter = atoi( argv[3] );
 		output_file = argv[4];
 		output = true;
 	} else if ( argc == 4 ) {
 		datadir = argv[1];
 		batch_size = atoi( argv[2] ); // mini-batch processing
-		max_iter = atoi( argv[3] );
+		maxiter = atoi( argv[3] );
 		output_file = "clf.model";
 	} else if ( argc == 4 ) {
 		datadir = argv[1];
