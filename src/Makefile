@@ -6,8 +6,8 @@ neuralnet_mpi: neuralnet_mpi.cpp
 logistic_mpi: logistic_mpi.cpp
 	mpic++ -std=c++11 -o logistic_mpi logistic_mpi.cpp -Wall -Wextra
 
-clf_predict: clf_predict.cpp
-	g++ -std=c++11 -o clf_predict clf_predict.cpp -Wall -Wextra
+LR_predict: LR_predict.cpp
+	g++ -std=c++11 -o LR_predict LR_predict.cpp -Wall -Wextra
 
 clean:
 	rm -f *.o neuralnet_mpi	logistic_mpi
