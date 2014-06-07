@@ -50,7 +50,6 @@ int main (int argc, char *argv[]) {
 
 	/* DATA INITIALIZATION */
     // danamically allocate data
-    printf( "m %lu n %lu\n", m, n );
 	Mat X( m, n );
 	Vec labels( m );
 
@@ -87,25 +86,33 @@ int main (int argc, char *argv[]) {
     std::ifstream model( model_file );
     int num_params;
     
+    // validate paramater cardinality
     model >> num_params;
     if ( num_params != theta.size() ) {
     	printf( "ERROR: Model paramters cardinality does not match testing set.\n" );
     	return 1;
     }
 
+    // load and set parameters
     for ( int i=0; i<num_params; ++i ) {
     	model >> theta[i];
     }
     clf.set_theta( theta );
-    // std::cout << clf.get_theta() << "\n";
 
 
     /* PREDICT */
+   	// predict probabilities
+   	printf( "Probability Matrix:\n" );
    	Mat probas = clf.predict_proba( X );
 	std::cout << probas << std::endl;
+
+	// predict class vector
+	printf( "\nClass Prdiction Vector:\n");
 	Vec pred = clf.predict( X );
 	std::cout << pred << std::endl;
 	
+	// output confusion matrix
+	printf( "\nConfusion Matrix:\n" );
 	Mat cm = mlu::confusion_matrix( y, pred );
 	std::cout << cm << std::endl;
 

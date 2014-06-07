@@ -88,7 +88,6 @@ namespace mlu {
 		// populate map using ordered unique labels
 		unsigned int idx = 0;
 		for ( auto& c : labels ) {
-			printf( "c %lf\n", c );
 			unique.emplace( c, idx++ );
 		}
 	}
