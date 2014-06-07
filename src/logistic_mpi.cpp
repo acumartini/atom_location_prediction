@@ -320,7 +320,7 @@ int main (int argc, char *argv[]) {
 
 		fprintf( output, "%lu\n", theta.size() );
 		for ( idx=0; idx<theta_size-1; ++idx ) {
-			fprint( output, "%lf\t", theta[idx] );
+			fprintf( output, "%lf\t", theta[idx] );
 		}
 		fprintf( output, "%lf\n", theta[idx] );
 
