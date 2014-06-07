@@ -32,7 +32,7 @@ ClassMap classmap; // a map of labels to label indices
 LayerSize numlabels;
 double *delta_data;
 bool scaling = true;
-double *X_min_vec, *X_max_vec, *X_min_data, *X_max_data;
+double *X_min_ptr, *X_max_ptr, *X_min_data, *X_max_data;
 
 // MPI reduce ops
 void reduce_unique_labels ( int *, int *, int *, MPI_Datatype * );
@@ -189,18 +189,17 @@ int main (int argc, char *argv[]) {
     	MPI_Op_create( (MPI_User_function *)reduce_X_min, 1, &op );
     	Vec X_min_tmp = X.colwise().minCoeff();
     	X_min_data = X_min_tmp.data();
-		Vec X_min = Vec( X_min_tmp.size() );
-		MPI_Allreduce( X_min_tmp.data(), X_min_vec, X_min_tmp.size(), MPI_DOUBLE, op, MPI_COMM_WORLD );
+		//Vec X_min = Vec( X_min_tmp.size() );
+		MPI_Allreduce( X_min_tmp.data(), X_min_ptr, X_min_tmp.size(), MPI_DOUBLE, op, MPI_COMM_WORLD );
 		MPI_Op_free( &op );
-		X_min << X_min_vec;
+		VecMap X_min = VecMap( X_min_ptr, X_min_tmp.size() );
 
     	MPI_Op_create( (MPI_User_function *)reduce_X_max, 1, &op );
 		Vec X_max = X.colwise().maxCoeff();
 		X_max_data = X_max_tmp.data();
-		Vec X_max = Vec( X_max_tmp.size() );
-		MPI_Allreduce( X_max_tmp.data(), X_max_vec, X_max_tmp.size(), MPI_DOUBLE, op, MPI_COMM_WORLD );
+		MPI_Allreduce( X_max_tmp.data(), X_max_ptr, X_max_tmp.size(), MPI_DOUBLE, op, MPI_COMM_WORLD );
 		MPI_Op_free( &op );
-		X_max << X_max_vec;
+		VecMap X_max = VecMap( X_max_ptr, X_max_tmp.size() );
 
 		std::cout << X_min << "\n\n";
 		std::cout << X_max << "\n\n";
