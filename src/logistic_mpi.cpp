@@ -314,7 +314,7 @@ int main (int argc, char *argv[]) {
 	if (taskid == MASTER) {
 		/* MODEL STORAGE */
 		FILE *output;
-		output = fopen ( output_file, "w" );
+		output = fopen ( output_file.c_str(), "w" );
 		size_t idx;
 		Vec theta = clf.get_theta();
 
