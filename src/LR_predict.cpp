@@ -82,6 +82,9 @@ int main (int argc, char *argv[]) {
 	Mat y = mlu::format_labels( labels, classmap );
 	numlabels = (LayerSize) classmap.size();
     std::cout << y << "\n";
+    for ( auto& kv : classmap ) {
+    	printf( "k %lf v %d\n", kv.first, kv.second );
+    }
 
 	/* INIT LOCAL CLASSIFIER */
 	LogisticRegression clf( n, numlabels );
