@@ -70,7 +70,7 @@ void reduce_X_min( double *X_min_in, double *X_min_out, int *len, MPI_Datatype *
 	}
 }
 
-void reduce_X_min( double *X_max_in, double *X_max_out, int *len, MPI_Datatype *dtype ) {
+void reduce_X_max( double *X_max_in, double *X_max_out, int *len, MPI_Datatype *dtype ) {
 	for ( int i=0; i<*len; ++i ) {
 		X_max_out[i] = std::min( X_max_in[i], X_max_data[i] );
 	}
@@ -195,7 +195,7 @@ int main (int argc, char *argv[]) {
 		VecMap X_min = VecMap( X_min_ptr, X_min_tmp.size() );
 
     	MPI_Op_create( (MPI_User_function *)reduce_X_max, 1, &op );
-		Vec X_max = X.colwise().maxCoeff();
+		Vec X_max_tmp = X.colwise().maxCoeff();
 		X_max_data = X_max_tmp.data();
 		MPI_Allreduce( X_max_tmp.data(), X_max_ptr, X_max_tmp.size(), MPI_DOUBLE, op, MPI_COMM_WORLD );
 		MPI_Op_free( &op );
