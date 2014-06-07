@@ -31,7 +31,7 @@ int main (int argc, char *argv[]) {
 	std::string datadir, model_file;
 
 	if ( argc != 3 ) {
-		printf( "Usage: ./logistic_mpi <data_directory> <model_file>\n" );
+		printf( "Usage: ./clf_predict <data_directory> <model_file>\n" );
 		exit( 0 );
 	} else {
 		datadir = argv[1];
@@ -50,6 +50,7 @@ int main (int argc, char *argv[]) {
 
 	/* DATA INITIALIZATION */
     // danamically allocate data
+    printf( "m %lu n %lu\n", m, n );
 	Mat X( m, n );
 	Vec labels( m );
 
