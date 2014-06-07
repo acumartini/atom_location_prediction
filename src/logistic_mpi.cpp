@@ -55,6 +55,7 @@ void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dt
 
 void reduce_gradient_update( double *delta_in, double *delta_out, int *len, MPI_Datatype *dtype ) {
 	for ( int i=0; i<*len; ++i ) {
+        printf( "len %d i %d delta_in[i] %f delta_data[i] %f\n", *len, i, delta_in[i], delta_data[i] );
 		delta_out[i] = delta_in[i] + delta_data[i];
 	}
 }
@@ -225,10 +226,11 @@ int main (int argc, char *argv[]) {
 	Vec delta_update = Vec::Zero( delta_size );
 	MPI_Op_create( (MPI_User_function *)reduce_gradient_update, 1, &op );
 
-	for ( int i=0; i<100; ++i ) {
+	for ( int i=0; i<2; ++i ) {
 		// compute gradient update
 		clf.compute_gradient( X, y );
 		delta_data = clf.get_delta().data();
+        std::cout << "TASK " << taskid << " DELTA " <<  clf.get_delta() << "\n\n";
 
 		// sum updates across all partitions
 		MPI_Allreduce( 
