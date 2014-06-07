@@ -111,9 +111,8 @@ int main (int argc, char *argv[]) {
 	}
 
 	// initialize/populate mpi specific vars local to each node
-	int  numtasks, taskid, len, dest, source;
+	int  numtasks, taskid, len;
 	char hostname[MPI_MAX_PROCESSOR_NAME];
-	MPI_Status status;
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &numtasks);
@@ -274,7 +273,7 @@ int main (int argc, char *argv[]) {
 	if (taskid == MASTER) {
 		FILE *output;
 		output = fopen ( output_file.c_str(), "w" );
-		size_t idx;
+		int idx;
 		Vec theta = LR_layer.get_theta();
 
 		fprintf( output, "%lu\n", theta.size() );
