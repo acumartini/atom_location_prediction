@@ -222,12 +222,12 @@ int main (int argc, char *argv[]) {
 	/* OPTIMIZATION */
 	double grad_mag;
 	int delta_size = clf.get_parameter_size();
-	Vec::Zero delta_update( delta_size );
+	Vec delta_update = Vec::Zero( delta_size );
 	MPI_Op_create( (MPI_User_function *)reduce_gradient_update, 1, &op );
 
 	for ( int i=0; i<100; ++i ) {
 		// compute gradient update
-		clf.compute_gradient( X, y )
+		clf.compute_gradient( X, y );
 		delta_data = clf.get_delta().data();
 
 		// sum updates across all partitions

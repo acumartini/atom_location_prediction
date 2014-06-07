@@ -26,6 +26,7 @@ typedef Eigen::MatrixXf::Index PredMat;
 /* ERROR HANDLING */
 #define NO_UPDATE 0
 #define INVALID_THETA_UPDATE 1
+#define INVALID_DELTA_UPDATE 1
 
 class LogisticRegressionError: public std::exception {
 public:
@@ -36,6 +37,9 @@ public:
 	    } else if ( code == INVALID_THETA_UPDATE ) {
 	    	return "Given theta parameters do not match the size of the current "
 	    		   "theta parameters.";
+	    } else if ( code == INVALID_DELTA_UPDATE ) {
+	    	return "Given delta parameters do not match the size of the current "
+	    		   "delta parameters.";
 	    }
 	    return "General Error";
 	}
@@ -144,14 +148,14 @@ public:
 	/*
 	 * Returns the size of the delta vector.
 	 */
-	int get_paramter_size () const {
+	int get_parameter_size () const {
 		return theta.size();
 	}
 
 	/*
 	 * Returns the current delta (gradient) vector.
 	 */
-	const Vec& get_delta () const { 
+	Vec& get_delta () { 
 		if ( !updated ) { throw LogisticRegressionError( NO_UPDATE ); }
 		else {
 			return delta; 
