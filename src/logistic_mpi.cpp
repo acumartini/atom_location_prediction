@@ -31,10 +31,14 @@ size_t begin, end; // where to index the datavec for each partition
 ClassMap classmap; // a map of labels to label indices
 LayerSize numlabels;
 double *delta_data;
+bool scaling = true;
+double *X_min_vec, *X_max_vec, *X_min_data, *X_max_data;
 
 // MPI reduce ops
 void reduce_unique_labels ( int *, int *, int *, MPI_Datatype * );
 void reduce_gradient_update ( double *, double *, int *, MPI_Datatype * );
+void reduce_X_min ( double *, double *, int *, MPI_Datatype * );
+void reduce_X_max ( double *, double *, int *, MPI_Datatype * );
  
 void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dtype )
 {
@@ -57,6 +61,18 @@ void reduce_gradient_update( double *delta_in, double *delta_out, int *len, MPI_
 	for ( int i=0; i<*len; ++i ) {
         printf( "len %d i %d delta_in[i] %f delta_data[i] %f\n", *len, i, delta_in[i], delta_data[i] );
 		delta_out[i] = delta_in[i] + delta_data[i];
+	}
+}
+
+void reduce_X_min( double *X_min_in, double *X_min_out, int *len, MPI_Datatype *dtype ) {
+	for ( int i=0; i<*len; ++i ) {
+		X_min_out[i] = std::min( X_min_in[i], X_min_data[i] );
+	}
+}
+
+void reduce_X_min( double *X_max_in, double *X_max_out, int *len, MPI_Datatype *dtype ) {
+	for ( int i=0; i<*len; ++i ) {
+		X_max_out[i] = std::min( X_max_in[i], X_max_data[i] );
 	}
 }
 
@@ -99,7 +115,7 @@ int main (int argc, char *argv[]) {
 	std::string datadir;
 	std::string output_file;
 	if ( argc > 3 || argc < 2 ) {
-		printf( " Usage: ./logistic_mpi <data_directory> <batch_size> <model_output_file");
+		printf( " Usage: ./logistic_mpi <data_directory> <batch_size> <model_output_file>\n");
 		exit( 0 );
 	} else if ( argc == 4 ) {
 		datadir = argv[1];
@@ -166,6 +182,32 @@ int main (int argc, char *argv[]) {
         i++;
 	}
     std::cout << X << "\n" << labels << "\n";
+
+    // perform feature scaling (optional)
+    if ( scaling ) {
+    	// Allreduce to find global min
+    	MPI_Op_create( (MPI_User_function *)reduce_X_min, 1, &op );
+    	Vec X_min_tmp = X.colwise().minCoeff();
+    	X_min_data = X_min_tmp.data();
+		Vec X_min = Vec( X_min_tmp.size() );
+		MPI_Allreduce( X_min_tmp.data(), X_min_vec, X_min_tmp.size(), MPI_DOUBLE, op, MPI_COMM_WORLD );
+		MPI_Op_free( &op );
+		X_min << X_min_vec;
+
+    	MPI_Op_create( (MPI_User_function *)reduce_X_max, 1, &op );
+		Vec X_max = X.colwise().maxCoeff();
+		X_max_data = X_max_tmp.data();
+		Vec X_max = Vec( X_max_tmp.size() );
+		MPI_Allreduce( X_max_tmp.data(), X_max_vec, X_max_tmp.size(), MPI_DOUBLE, op, MPI_COMM_WORLD );
+		MPI_Op_free( &op );
+		X_max << X_max_vec;
+
+		std::cout << X_min << "\n\n";
+		std::cout << X_max << "\n\n";
+
+		mlu::scale_features( X, X_min, X_max, 1, 0 );
+    }
+
 
 	/* FORMAT LABELS */
 	// get unique labels

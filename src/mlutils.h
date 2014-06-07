@@ -29,7 +29,7 @@ namespace mlu {
 	}
 
 	// Distributed version: X_min and X_max are communicated through Allreduce
-	void scale_features ( Mat& X, int new_max, int new_min ) {
+	void scale_features ( Mat& X, Vec& X_min, Vec& X_max, int new_max, int new_min ) {
 		Vec X_min = X.colwise().minCoeff();
 		Vec X_max = X.colwise().maxCoeff();
 		Mat tmp = X.rowwise() - X_min;
