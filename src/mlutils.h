@@ -48,9 +48,6 @@ namespace mlu {
 				unique.emplace( y[i], index_count++ );
 			}
 		}
-		// for ( auto& kv : unique ) {
-		// 	printf( "k = %lf, v = %d\n", kv.first, kv.second );
-		// }
 	}
 
 	Mat format_labels ( Vec& y, ClassMap& unique ) {

@@ -202,10 +202,12 @@ int main (int argc, char *argv[]) {
 		MPI_Op_free( &op );
 		// VecMap X_max = VecMap( X_max_ptr, X_max_tmp.size() );
 
-		std::cout << X_min << "\n\n";
+		std::cout << "\n" << X_min << "\n";
 		std::cout << X_max << "\n\n";
 
 		mlu::scale_features( X, X_min, X_max, 1, 0 );
+
+		std::cout << X << "\n" << labels << "\n";
     }
 
 
