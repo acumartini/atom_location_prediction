@@ -28,6 +28,17 @@ namespace mlu {
 		X = tmp.matrix();
 	}
 
+	// Distributed version: X_min and X_max are communicated through Allreduce
+	void scale_features ( Mat& X, int new_max, int new_min ) {
+		Vec X_min = X.colwise().minCoeff();
+		Vec X_max = X.colwise().maxCoeff();
+		Mat tmp = X.rowwise() - X_min;
+		Vec tmp2 = (X_max - X_min) * (new_max - new_min);
+		tmp = tmp * tmp2.asDiagonal().inverse();
+		tmp = tmp.array() + new_min;
+		X = tmp.matrix();
+	}
+
 	void get_unique_labels( Vec& y, ClassMap& unique ) {
 		ClassMap::const_iterator got;
 		
