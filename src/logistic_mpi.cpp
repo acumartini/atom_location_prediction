@@ -59,7 +59,7 @@ void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dt
 
 void reduce_gradient_update( double *delta_in, double *delta_out, int *len, MPI_Datatype *dtype ) {
 	for ( int i=0; i<*len; ++i ) {
-        printf( "len %d i %d delta_in[i] %f delta_data[i] %f\n", *len, i, delta_in[i], delta_data[i] );
+        // printf( "len %d i %d delta_in[i] %f delta_data[i] %f\n", *len, i, delta_in[i], delta_data[i] );
 		delta_out[i] = delta_in[i] + delta_data[i];
 	}
 }
@@ -110,25 +110,35 @@ void count_features( std::string datadir, int taskid ) {
 
 int main (int argc, char *argv[]) {
     // handle cmd args
-	int batch_size;
+	int batch_size, maxiter;
 	bool output = false;
 	std::string datadir;
 	std::string output_file;
-	if ( argc > 3 || argc < 2 ) {
-		printf( " Usage: ./logistic_mpi <data_directory> <batch_size> <model_output_file>\n");
+	if ( argc > 5 || argc < 2 ) {
+		printf( "Usage: ./logistic_mpi <data_directory> <batch_size> "
+				"<max_iterations> <model_output_file>\n");
+		MPI_Finalize();
 		exit( 0 );
+	} else if ( argc == 5 ) {
+		datadir = argv[1];
+		batch_size = atoi( argv[2] ); // mini-batch processing
+		max_iter = atoi( argv[3] );
+		output_file = argv[4];
+		output = true;
 	} else if ( argc == 4 ) {
 		datadir = argv[1];
 		batch_size = atoi( argv[2] ); // mini-batch processing
-		output_file = argv[3];
-		output = true;
-	} else if ( argc == 3 ) {
+		max_iter = atoi( argv[3] );
+		output_file = "clf.model";
+	} else if ( argc == 4 ) {
 		datadir = argv[1];
 		batch_size = atoi( argv[2] ); // mini-batch processing
+		maxiter = 100;
 		output_file = "clf.model";
 	} else {
 		datadir = argv[1];
 		batch_size = INT_MIN; // batch processing
+		maxiter = 100;
 		output_file = "clf.model";
 	}
 
@@ -181,7 +191,7 @@ int main (int argc, char *argv[]) {
 		labels[i] = label;
         i++;
 	}
-    std::cout << X << "\n" << labels << "\n";
+    // std::cout << X << "\n" << labels << "\n";
 
     // perform feature scaling (optional)
     if ( scaling ) {
@@ -192,19 +202,19 @@ int main (int argc, char *argv[]) {
     	Vec X_min = Vec( X_min_tmp.size() );
 		MPI_Allreduce( X_min_tmp.data(), X_min.data(), X_min_tmp.size(), MPI_DOUBLE, op, MPI_COMM_WORLD );
 		MPI_Op_free( &op );
-		// VecMap X_min = VecMap( X_min_ptr, X_min_tmp.size() );
 
+    	// Allreduce to find global max
     	MPI_Op_create( (MPI_User_function *)reduce_X_max, 1, &op );
 		Vec X_max_tmp = X.colwise().maxCoeff();
 		X_max_data = X_max_tmp.data();
 		Vec X_max = Vec( X_max_tmp.size() );
 		MPI_Allreduce( X_max_tmp.data(), X_max.data(), X_max_tmp.size(), MPI_DOUBLE, op, MPI_COMM_WORLD );
 		MPI_Op_free( &op );
-		// VecMap X_max = VecMap( X_max_ptr, X_max_tmp.size() );
 
-		std::cout << "\n" << X_min << "\n";
-		std::cout << X_max << "\n\n";
+		// std::cout << "\n" << X_min << "\n";
+		// std::cout << X_max << "\n\n";
 
+		// scale features using global min and max
 		mlu::scale_features( X, X_min, X_max, 1, 0 );
 
 		std::cout << X << "\n" << labels << "\n";
@@ -268,13 +278,13 @@ int main (int argc, char *argv[]) {
 	double grad_mag;
 	int delta_size = clf.get_parameter_size();
 	Vec delta_update = Vec::Zero( delta_size );
-	MPI_Op_create( (MPI_User_function *)reduce_gradient_update, 1, &op );
 
-	for ( int i=0; i<2; ++i ) {
+	MPI_Op_create( (MPI_User_function *)reduce_gradient_update, 1, &op );
+	for ( int i=0; i<maxiter; ++i ) {
 		// compute gradient update
 		clf.compute_gradient( X, y );
 		delta_data = clf.get_delta().data();
-        std::cout << "TASK " << taskid << " DELTA " <<  clf.get_delta() << "\n\n";
+        // std::cout << "TASK " << taskid << " DELTA " <<  clf.get_delta() << "\n\n";
 
 		// sum updates across all partitions
 		MPI_Allreduce( 
@@ -294,11 +304,10 @@ int main (int argc, char *argv[]) {
 		// update clf parameters
 		if ( clf.converged( grad_mag ) ) { break; }
 		if ( taskid == MASTER ) {
-			printf( "%d : %lf\n", i, grad_mag );
+			printf( "%d : %lf\n", i+1, grad_mag );
 		}
 		clf.update_theta();
 	}
-
 	MPI_Op_free( &op );
 
 
