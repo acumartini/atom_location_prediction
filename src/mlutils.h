@@ -19,6 +19,7 @@
 
 typedef std::unordered_map<double, int> ClassMap;
 typedef std::unordered_set<int> ClassSet;
+typedef std::vector<std::string> DataVec;
 
 namespace mlu {
 
