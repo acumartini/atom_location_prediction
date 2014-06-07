@@ -11,14 +11,14 @@
 #include <dirent.h>
 #include <iostream>
 #include <unordered_map>
-#include <unordered_set>
+#include <set>
 #include <vector>
 #include <string>
 
 #include "logistic.h"  // just to get typdefs (fix this later)
 
 typedef std::unordered_map<double, int> ClassMap;
-typedef std::unordered_set<int> ClassSet;
+typedef std::set<double> ClassSet;
 typedef std::vector<std::string> DataVec;
 
 namespace mlu {
@@ -74,15 +74,22 @@ namespace mlu {
 	}
 
 	void get_unique_labels( Vec& y, ClassMap& unique ) {
-		ClassMap::const_iterator got;
+		ClassSet labels;
+		ClassSet::const_iterator got;
 		
-		// find unique items and map them to incremental indices
-		unsigned int index_count = 0;
+		// find unique items and sort them, then map them to incremental indices
 		for ( int i=0; i<y.size(); ++i ) {
-			got = unique.find( y[i] );
-			if ( got == unique.end() ) {  // new unique
-				unique.emplace( y[i], index_count++ );
+			got = labels.find( y[i] );
+			if ( got == labels.end() ) {  // new unique
+				labels.insert( y[i] );
 			}
+		}
+
+		// populate map using ordered unique labels
+		unsigned int idx = 0;
+		for ( auto& c : labels ) {
+			printf( "c %lf\n", c );
+			unique.emplace( c, idx++ );
 		}
 	}
 
