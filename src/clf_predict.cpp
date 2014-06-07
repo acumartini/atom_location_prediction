@@ -66,6 +66,7 @@ int main (int argc, char *argv[]) {
 		labels[i] = label;
         i++;
 	}
+	std::cout << X << "\n" << labels << "\n";
 
     // perform feature scaling (optional)
     if ( scaling ) {
