@@ -10,7 +10,6 @@
 #include <iterator>
 #include <vector>
 
-#include "mpi.h"
 #include "logistic.h"
 #include "mlutils.h"
 
