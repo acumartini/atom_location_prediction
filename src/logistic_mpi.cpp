@@ -217,7 +217,7 @@ int main (int argc, char *argv[]) {
 		// scale features using global min and max
 		mlu::scale_features( X, X_min, X_max, 1, 0 );
 
-		std::cout << X << "\n" << y << "\n";
+		// std::cout << X << "\n" << y << "\n";
     }
 
 
@@ -324,6 +324,8 @@ int main (int argc, char *argv[]) {
 			fprint( output, "%lf\t", theta[idx] );
 		}
 		fprintf( output, "%lf\n", theta[idx] );
+
+		fclose( output );
 	} 
 
 	MPI_Finalize();
