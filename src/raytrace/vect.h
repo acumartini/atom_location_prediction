@@ -8,6 +8,9 @@ Welsey Erickson - 2014
 
 using namespace std;
 
+
+//#define DEBUG_OUTPUT
+
 #define LARGE_REPLACEMENT 1000000.0
 
 // Wooo Constants!
@@ -147,25 +150,32 @@ bool RayIntersection(Ray * ray, Flt (*f)(Flt, Flt), Flt tstart, Flt tend, Vec B)
     RayPoint(ray,a,B);
     Flt a_error = B[2]-(*f)(B[0],B[1]);
     if( isnan(a_error) ){
+      #ifdef DEBUG_OUTPUT
       cerr < "ERROR: intersection overflow\n";
+      #endif
       a_error = copysign(LARGE_REPLACEMENT,a_error);
     }
     RayPoint(ray,b,B);
     Flt b_error = B[2]-(*f)(B[0],B[1]);
     if( isnan(b_error) ){
+      #ifdef DEBUG_OUTPUT
       cerr < "ERROR: intersection overflow\n";
+      #endif
       b_error = copysign(LARGE_REPLACEMENT,b_error);
     }
 
     RayPoint(ray,t,B);
     Flt error = B[2]-(*f)(B[0],B[1]);
     if( isnan(error) ){
+      #ifdef DEBUG_OUTPUT
       cerr < "ERROR: intersection overflow\n";
+      #endif
       error = -copysign(LARGE_REPLACEMENT,error);
     }
     steps++;
 
     //Debugging printouts
+    #ifdef DEBUG_OUTPUT
     cerr << "steps:" << steps;
     cerr << " err:" << error;
     cerr << " aerr:" << a_error;
@@ -176,7 +186,7 @@ bool RayIntersection(Ray * ray, Flt (*f)(Flt, Flt), Flt tstart, Flt tend, Vec B)
     cerr << " a:" << a;
     cerr << " b:" << b;
     cerr << "\n";
-    
+    #endif
 
     // Stop if we've tried too long.
     if(steps>MAX_STEPS){
@@ -295,7 +305,9 @@ bool RefractRay(Ray * input_ray, Ray * output_ray, Flt n1, Flt n2, Flt tstart, F
     // Not sure I need these now. Were used
     // for initializing variables which may
     // not have been defined.
+    #ifdef DEBUG_OUTPUT
     cerr << "no intersection\n";
+    #endif
     output_ray->P[0]=0.0;
     output_ray->P[1]=0.0;
     output_ray->P[2]=0.0;
