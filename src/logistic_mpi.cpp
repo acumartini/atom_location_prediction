@@ -3,7 +3,6 @@
 #include <iostream>
 #include <limits.h>
 #include <string>
-#include <dirent.h>
 #include <sstream>
 #include <fstream>
 #include <iostream>
@@ -20,18 +19,26 @@
 #include "Eigen/Core"
 using namespace Eigen;
 
-#define  MASTER		0
+#define MASTER 0
 
-typedef unsigned long ProbSize;
+typedef std::vector<std::string> DataVec;
 
-// globla model variables
-ProbSize m, n; // numbers of instance and features
+
+// global model variables
+ProbSize num_inst, m, n; // numbers of instance and features
+size_t begin, end; // where to index the datavec for each partition
 ClassMap classmap; // a map of labels to label indices
 LayerSize numlabels;
+double *delta_data;
+double *X_min_ptr, *X_max_ptr, *X_min_data, *X_max_data;
+bool scaling = false;
+
 
 // MPI reduce ops
 void reduce_unique_labels ( int *, int *, int *, MPI_Datatype * );
-// void reduce_gradient_update ( int *, int *, int *, MPI_Datatype * );
+void reduce_gradient_update ( double *, double *, int *, MPI_Datatype * );
+void reduce_X_min ( double *, double *, int *, MPI_Datatype * );
+void reduce_X_max ( double *, double *, int *, MPI_Datatype * );
  
 void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dtype )
 {
@@ -50,84 +57,128 @@ void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dt
     }
 }
 
-
-void count_instances( std::string datafile ) {
-	struct dirent *pDirent;
-	DIR *pDir;
-	m = 0;
-	pDir = opendir( datafile.c_str() );
-
-	if (pDir != NULL) {
-	    while ( ( pDirent = readdir( pDir ) ) != NULL) { m++; }
-		m -= 2; // ignore "." and ".." directory reads
-	    closedir (pDir);
+void reduce_gradient_update( double *delta_in, double *delta_out, int *len, MPI_Datatype *dtype ) {
+	for ( int i=0; i<*len; ++i ) {
+        // printf( "len %d i %d delta_in[i] %f delta_data[i] %f\n", *len, i, delta_in[i], delta_data[i] );
+		delta_out[i] = delta_in[i] + delta_data[i];
 	}
 }
 
-void count_features( std::string datafile, int taskid ) {
-	std::ifstream infile( datafile );
-	std::string line;
-	std::getline( infile, line );
-    std::istringstream iss( line );
-    std::vector<std::string> tokens{
-    	std::istream_iterator<std::string>{iss},
-    	std::istream_iterator<std::string>{}
-    };
-    n = tokens.size() - 1; // -1 for label
+void reduce_X_min( double *X_min_in, double *X_min_out, int *len, MPI_Datatype *dtype ) {
+	for ( int i=0; i<*len; ++i ) {
+		X_min_out[i] = std::min( X_min_in[i], X_min_data[i] );
+	}
 }
+
+void reduce_X_max( double *X_max_in, double *X_max_out, int *len, MPI_Datatype *dtype ) {
+	for ( int i=0; i<*len; ++i ) {
+		X_max_out[i] = std::max( X_max_in[i], X_max_data[i] );
+	}
+}
+
 
 int main (int argc, char *argv[]) {
     // handle cmd args
-	int batch_size;
-	if ( argc > 2 ) {
-		printf( " Usage: ./logistic_mpi <batch_size>");
+	int batch_size, maxiter;
+	std::string datadir;
+	std::string output_file;
+
+	if ( argc > 5 || argc < 2 ) {
+		printf( "Usage: ./logistic_mpi <data_directory> <batch_size> "
+				"<max_iterations> <model_output_file>\n");
+		MPI_Finalize();
 		exit( 0 );
-	} else if ( argc == 2 ) {
-		batch_size = atoi( argv[1] ); // mini-batch processing
+	} else if ( argc == 5 ) {
+		datadir = argv[1];
+		batch_size = atoi( argv[2] ); // mini-batch processing
+		maxiter = atoi( argv[3] );
+		output_file = argv[4];
+	} else if ( argc == 4 ) {
+		datadir = argv[1];
+		batch_size = atoi( argv[2] ); // mini-batch processing
+		maxiter = atoi( argv[3] );
+		output_file = "LR.model";
+	} else if ( argc == 4 ) {
+		datadir = argv[1];
+		batch_size = atoi( argv[2] ); // mini-batch processing
+		maxiter = 100;
+		output_file = "LR.model";
 	} else {
+		datadir = argv[1];
 		batch_size = INT_MIN; // batch processing
+		maxiter = 100;
+		output_file = "LR.model";
 	}
 
 	// initialize/populate mpi specific vars local to each node
-	int  numtasks, taskid, len, dest, source;
+	int  numtasks, taskid, len;
 	char hostname[MPI_MAX_PROCESSOR_NAME];
-	MPI_Status status;
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &numtasks);
 	MPI_Comm_rank(MPI_COMM_WORLD,&taskid);
 	MPI_Get_processor_name(hostname, &len);
+	MPI_Op op;
 
 
 	/* DATA PREPROCESSING */
-	// define data directory for each node
-	std::string taskstr = std::to_string( taskid );
-	std::string datafile = "./data/data";
-	datafile += taskstr + "/train" + taskstr + ".tsv";
-
 	// determine number of instances
-	count_instances( datafile );
+	DataVec datavec;
+	mlu::count_instances( datadir, datavec, num_inst );
 
 	// determine number of features
-	count_features( datafile, taskid );
+	mlu::count_features( datadir, n );
 
 
 	/* DATA INITIALIZATION */
-    m = 20; // TEMPORARY TESTING VALUE
-    printf( "m = %lu n = %lu\n", m, n );
+	// randomize instance 
+	std::random_shuffle ( datavec.begin(), datavec.end() );
+
+	// partition data based on taskid
+	size_t div = datavec.size() / numtasks;
+	ProbSize limit = ( taskid == numtasks - 1 ) ? num_inst : div * ( taskid + 1 );
+	m = limit - div * taskid;
+
+    // danamically allocate data
 	Mat X( m, n );
 	Vec labels( m );
-	double feat_val, label;
-	std::ifstream data( datafile );
-	for ( ProbSize i=0; i<m; ++i ) {
+
+    // load data partition
+    double feat_val, label;
+    ProbSize i = 0;
+	for ( ProbSize idx = taskid * div; idx < limit; ++idx ) {
+	    std::ifstream data( datavec[idx] );
 		for ( ProbSize j=0; j<n; ++j ) {
 			data >> feat_val;
 			X(i,j) = feat_val;
 		}
 		data >> label;
 		labels[i] = label;
+        i++;
 	}
-    // std::cout << X << "\n" << labels << "\n";
+
+    // perform feature scaling (optional)
+    if ( scaling ) {
+    	// Allreduce to find global min
+    	MPI_Op_create( (MPI_User_function *)reduce_X_min, 1, &op );
+    	Vec X_min_tmp = X.colwise().minCoeff();
+    	X_min_data = X_min_tmp.data();
+    	Vec X_min = Vec( X_min_tmp.size() );
+		MPI_Allreduce( X_min_tmp.data(), X_min.data(), X_min_tmp.size(), MPI_DOUBLE, op, MPI_COMM_WORLD );
+		MPI_Op_free( &op );
+
+    	// Allreduce to find global max
+    	MPI_Op_create( (MPI_User_function *)reduce_X_max, 1, &op );
+		Vec X_max_tmp = X.colwise().maxCoeff();
+		X_max_data = X_max_tmp.data();
+		Vec X_max = Vec( X_max_tmp.size() );
+		MPI_Allreduce( X_max_tmp.data(), X_max.data(), X_max_tmp.size(), MPI_DOUBLE, op, MPI_COMM_WORLD );
+		MPI_Op_free( &op );
+
+		// scale features using global min and max
+		mlu::scale_features( X, X_min, X_max, 1, 0 );
+    }
+
 
 	/* FORMAT LABELS */
 	// get unique labels
@@ -148,11 +199,12 @@ int main (int argc, char *argv[]) {
 		unique_labels[idx++] = kv.first;
 	}
 	int global_unique_labels[max_size];
-	MPI_Op op;
 	MPI_Op_create( (MPI_User_function *)reduce_unique_labels, 1, &op );
 	MPI_Allreduce( unique_labels, global_unique_labels, max_size, MPI_INT, op, MPI_COMM_WORLD );
+	MPI_Op_free( &op );
 	
 	// update local classmap
+	std::sort( global_unique_labels, global_unique_labels + max_size );
 	classmap.clear();
 	int labeltmp;
 	idx=0;
@@ -169,35 +221,70 @@ int main (int argc, char *argv[]) {
 
 
 	/* INIT LOCAL CLASSIFIER */
-	LogisticRegression clf( n, numlabels );
+	LogisticRegression LR_layer( n, numlabels, true );
 
 	// initialize and communicate paramters
-	if (taskid == MASTER) {
-		// init and send parameters
+	// if (taskid == MASTER) {
+	// 	// init and send parameters
 
-	} else {
-		// recieve network parameters and update local classifier
+	// } else {
+	// 	// recieve network parameters and update local classifier
 
-	}
+	// }
 
 
 	/* OPTIMIZATION */
+	double grad_mag;
+	int delta_size = LR_layer.get_theta_size();
+	Vec delta_update = Vec::Zero( delta_size );
+
+	MPI_Op_create( (MPI_User_function *)reduce_gradient_update, 1, &op );
+	for ( int i=0; i<maxiter; ++i ) {
+		// compute gradient update
+		LR_layer.compute_gradient( X, y );
+		delta_data = LR_layer.get_delta().data();
+
+		// sum updates across all partitions
+		MPI_Allreduce( 
+			delta_data,
+			delta_update.data(),
+			delta_size,
+			MPI_DOUBLE,
+			op,
+			MPI_COMM_WORLD
+		);
+		LR_layer.set_delta( delta_update );
+
+		// normalize + regularize gradient update
+		LR_layer.normalize_gradient( num_inst );
+		LR_layer.regularize_gradient( num_inst );
+
+		// update LR_layer parameters
+		if ( LR_layer.converged( grad_mag ) ) { break; }
+		if ( taskid == MASTER ) {
+			printf( "%d : %lf\n", i+1, grad_mag );
+		}
+		LR_layer.update_theta();
+	}
+	MPI_Op_free( &op );
 
 
-
-	// perform prediction and model storage tasks on a single node
+	/* MODEL STORAGE */
 	if (taskid == MASTER) {
-		/* PREDICTION */
+		FILE *output;
+		output = fopen ( output_file.c_str(), "w" );
+		int idx;
+		Vec theta = LR_layer.get_theta();
 
-		// predict on validation set
+		fprintf( output, "%lu\n", theta.size() );
+		for ( idx=0; idx<theta.size()-1; ++idx ) {
+			fprintf( output, "%lf\t", theta[idx] );
+		}
+		fprintf( output, "%lf\n", theta[idx] );
 
-		// output prediction results
-
-
-		/* MODEL STORAGE */
-
-		// store parameters
+		fclose( output );
 	} 
 
 	MPI_Finalize();
+	return 0;
 }

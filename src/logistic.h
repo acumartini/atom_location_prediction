@@ -14,6 +14,7 @@
 #include "Eigen/Core"
 
 
+typedef unsigned long ProbSize;
 typedef unsigned int LayerSize;
 typedef Eigen::MatrixXd Mat;
 typedef Eigen::Map<Mat> MatMap;
@@ -25,6 +26,7 @@ typedef Eigen::MatrixXf::Index PredMat;
 /* ERROR HANDLING */
 #define NO_UPDATE 0
 #define INVALID_THETA_UPDATE 1
+#define INVALID_DELTA_UPDATE 1
 
 class LogisticRegressionError: public std::exception {
 public:
@@ -35,6 +37,9 @@ public:
 	    } else if ( code == INVALID_THETA_UPDATE ) {
 	    	return "Given theta parameters do not match the size of the current "
 	    		   "theta parameters.";
+	    } else if ( code == INVALID_DELTA_UPDATE ) {
+	    	return "Given delta parameters do not match the size of the current "
+	    		   "delta parameters.";
 	    }
 	    return "General Error";
 	}
@@ -88,7 +93,7 @@ public:
 		Mat probas = softmax( (X * W).rowwise() + b ); // compute P( y | X )
 		Mat error = probas - y; // compute the error
 
-		// check if the algorithms is used in a distributed setting and only normalize
+		// check if the algorithm is used in a distributed setting and only normalize
 		// the gradient if running on a single process
 		if ( distributed ) { 
 			dW = X.transpose() * error;
@@ -97,9 +102,26 @@ public:
 			dW = X.transpose() * error;
 			dW.noalias() += ( W * lambda ) / X.rows(); // apply regularization
 			db = error.colwise().mean();
+			delta.array() /= X.rows();
 		}
 
 		updated = true;  // now safe to access gradient update data
+	}
+
+	/*
+	 * Called if using distributed model to normalize gradient based on total number
+	 * of instances.
+	 */
+	void normalize_gradient( const ProbSize& m ) {
+		delta.array() /= m;
+	}
+
+	/*
+	 * Called if using distributed model to regularize gradient based on total number
+	 * of instances.
+	 */
+	void regularize_gradient( const ProbSize& m ) {
+		dW.noalias() += ( W * lambda ) / m; // do not regularize bias updates
 	}
 
 	Mat softmax ( Mat z ) {
@@ -113,7 +135,8 @@ public:
 		if ( theta_update.size() != theta.size() ) {
 			throw LogisticRegressionError( INVALID_THETA_UPDATE );
 		}
-		theta << theta_update; }
+		theta << theta_update;
+	}
 
 	/*
 	 * Allows the client to set internal optimization variables.
@@ -123,14 +146,38 @@ public:
 	}
 
 	/*
+	 * Returns the size of the delta vector.
+	 */
+	int get_theta_size () const {
+		return theta.size();
+	}
+
+	/*
+	 * Returns the current theta vector.
+	 */
+	Vec& get_theta () { 
+		return theta;
+	}
+
+	/*
 	 * Returns the current delta (gradient) vector.
 	 */
-	const Vec& get_delta () const { 
+	Vec& get_delta () { 
 		if ( !updated ) { throw LogisticRegressionError( NO_UPDATE ); }
 		else {
 			return delta; 
 		}
 	}
+
+	/*
+	 * Allows the client to set the delta parameters 
+	 */
+	void set_delta ( const Vec& delta_update ) { 
+		if ( delta_update.size() != theta.size() ) {
+			throw LogisticRegressionError( INVALID_DELTA_UPDATE );
+		}
+		delta << delta_update;
+	}	
 
 	/*
 	 * Returns true if the magnitude of the gradient is less than or equal to the convergence
@@ -189,7 +236,7 @@ private:
 	// model parameters
 	Vec theta, delta;
 	MatMap W, dW;
-	VecMap b, db; 
+	VecMap b, db;
 	bool distributed, updated;
 
 	// update parameters

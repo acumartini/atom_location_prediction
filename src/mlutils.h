@@ -8,15 +8,51 @@
 #ifndef MLUTILS_H_
 #define MLUTILS_H_
 
+#include <dirent.h>
 #include <iostream>
 #include <unordered_map>
-#include <unordered_set>
+#include <set>
+#include <vector>
+#include <string>
+
 #include "logistic.h"  // just to get typdefs (fix this later)
 
 typedef std::unordered_map<double, int> ClassMap;
-typedef std::unordered_set<int> ClassSet;
+typedef std::set<double> ClassSet;
+typedef std::vector<std::string> DataVec;
 
 namespace mlu {
+
+	void count_instances( std::string datadir, DataVec& datavec, ProbSize& num_inst ) {
+		struct dirent *pDirent;
+		DIR *pDir;
+		num_inst = 0;
+		std::string filename;
+		pDir = opendir( datadir.c_str() );
+
+		if (pDir != NULL) {
+		    while ( ( pDirent = readdir( pDir ) ) != NULL) {
+		    	filename = pDirent->d_name;
+		    	if ( filename != "." && filename != ".." ) {
+		    		datavec.push_back( datadir + "/" + filename );
+			    	num_inst++; 
+		    	}
+		   	}
+		    closedir (pDir);
+		}
+	}
+
+	void count_features( std::string datadir, ProbSize& n ) {
+		std::ifstream infile( datadir + "/0.tsv" );
+		std::string line;
+		std::getline( infile, line );
+	    std::istringstream iss( line );
+	    std::vector<std::string> tokens{
+	    	std::istream_iterator<std::string>{iss},
+	    	std::istream_iterator<std::string>{}
+	    };
+	    n = tokens.size() - 1; // -1 for label
+	}
 	
 	void scale_features ( Mat& X, int new_max, int new_min ) {
 		Vec X_min = X.colwise().minCoeff();
@@ -28,20 +64,32 @@ namespace mlu {
 		X = tmp.matrix();
 	}
 
+	// Distributed version: X_min and X_max are communicated through Allreduce
+	void scale_features ( Mat& X, Vec& X_min, Vec& X_max, int new_max, int new_min ) {
+		Mat tmp = X.rowwise() - X_min;
+		Vec tmp2 = (X_max - X_min) * (new_max - new_min);
+		tmp = tmp * tmp2.asDiagonal().inverse();
+		tmp = tmp.array() + new_min;
+		X = tmp.matrix();
+	}
+
 	void get_unique_labels( Vec& y, ClassMap& unique ) {
-		ClassMap::const_iterator got;
+		ClassSet labels;
+		ClassSet::const_iterator got;
 		
-		// find unique items and map them to incremental indices
-		unsigned int index_count = 0;
+		// find unique items and sort them, then map them to incremental indices
 		for ( int i=0; i<y.size(); ++i ) {
-			got = unique.find( y[i] );
-			if ( got == unique.end() ) {  // new unique
-				unique.emplace( y[i], index_count++ );
+			got = labels.find( y[i] );
+			if ( got == labels.end() ) {  // new unique
+				labels.insert( y[i] );
 			}
 		}
-		// for ( auto& kv : unique ) {
-		// 	printf( "k = %lf, v = %d\n", kv.first, kv.second );
-		// }
+
+		// populate map using ordered unique labels
+		unsigned int idx = 0;
+		for ( auto& c : labels ) {
+			unique.emplace( c, idx++ );
+		}
 	}
 
 	Mat format_labels ( Vec& y, ClassMap& unique ) {
