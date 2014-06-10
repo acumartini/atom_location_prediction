@@ -21,7 +21,7 @@ using namespace Eigen;
 ProbSize m, n; // numbers of instances and features
 ClassMap classmap; // a map of labels to label indices
 LayerSize numlabels;
-bool scaling = false;
+bool scaling = true;
 
 typedef std::vector<std::string> DataVec;
 
