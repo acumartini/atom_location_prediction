@@ -177,6 +177,7 @@ int main (int argc, char *argv[]) {
 		// scale features using global min and max
 		mlu::scale_features( X, X_min, X_max, 1, 0 );
     }
+    std::cout << "X\n" << X << "\n";
 
 
 	/* FORMAT LABELS */
