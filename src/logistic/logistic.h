@@ -168,8 +168,6 @@ public:
 		if ( theta_update.size() != theta.size() ) {
 			throw LogisticRegressionError( INVALID_THETA_UPDATE );
 		}
-		std::cout << "THETA:\n" << theta << "\n";
-		std::cout << "THETA_UPDATE:\n" << theta_update << "\n";
 		theta << theta_update;
 	}
 
@@ -232,7 +230,9 @@ public:
 	void update_theta () {
 		if ( !updated ) { throw LogisticRegressionError( NO_UPDATE ); } 
 		else {
+			std::cout << "THETA:\n" << theta << "\n";
 			theta.noalias() -= alpha * delta;
+			std::cout << "NEW THETA:\n" << theta << "\n";
 			updated = false; // disallow theta updates until the gradient is re-computed
 		}
 	}
