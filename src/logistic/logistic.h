@@ -99,10 +99,14 @@ public:
 		int new_batch_idx = 0;
 
 		// compute data pointers and batch size variables
-		if ( batch_size != INT_MIN ) { // this is a mini-batch
+		if ( batch_size != INT_MIN && batch_size < X.rows() ) { // this is a mini-batch
 			X_update_start = X.data() + batch_idx;
 			error_update_start = error.data() + batch_idx;
-			if ( batch_idx + batch_size > X.rows() ) {
+			if ( batch_idx == X.rows() ) {
+				X_update_start = X.data();
+				update_size = batch_size;
+				new_batch_idx = batch_size;
+			} else if ( batch_idx + batch_size > X.rows() ) {
 				update_size = X.rows() - batch_idx;
 				new_batch_idx = 0;
 			} else {
