@@ -95,23 +95,23 @@ public:
 	void compute_gradient ( const Mat& X, const Mat& y, int batch_size, int& update_size ) {
 		Mat probas = softmax( (X * W).rowwise() + b ); // compute P( y | X )
 		Mat error = probas - y; // compute the error
-		MatMap X_batch;
+		//MatMap X_batch;
 		int new_batch_idx = 0;
 
 		// create Map over input vector based on batch size
 		if ( batch_size != INT_MIN ) { // this is a mini-batch
 			if ( batch_idx + batch_size > X.rows() ) {
 				update_size = X.rows() - batch_idx;
-				X_batch = MatMap( X.data() + batch_idx, update_size, X.cols() );
+				MatMap X_batch = MatMap( X.data() + batch_idx, update_size, X.cols() );
 				new_batch_idx = 0;
 			} else {
 				update_size = batch_size;
-				X_batch = MatMap( X.data() + batch_idx, update_size, X.cols() );
+				MatMap X_batch = MatMap( X.data() + batch_idx, update_size, X.cols() );
 				new_batch_idx = batch_idx + batch_size;
 			}
 		} else  { // batch processing
 			update_size = X.rows();
-			X_batch = MatMap( X.data(), X.rows(), X.cols() );
+			MatMap X_batch = MatMap( X.data(), X.rows(), X.cols() );
 		}
 
 		// check if the algorithm is used in a distributed setting and only normalize
