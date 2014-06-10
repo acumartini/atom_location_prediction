@@ -59,7 +59,6 @@ void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dt
 
 void reduce_gradient_update( double *delta_in, double *delta_out, int *len, MPI_Datatype *dtype ) {
 	for ( int i=0; i<*len; ++i ) {
-        // printf( "len %d i %d delta_in[i] %f delta_data[i] %f\n", *len, i, delta_in[i], delta_data[i] );
 		delta_out[i] = delta_in[i] + delta_data[i];
 	}
 }
@@ -222,15 +221,6 @@ int main (int argc, char *argv[]) {
 
 	/* INIT LOCAL CLASSIFIER */
 	LogisticRegression LR_layer( n, numlabels, true );
-
-	// initialize and communicate paramters
-	// if (taskid == MASTER) {
-	// 	// init and send parameters
-
-	// } else {
-	// 	// recieve network parameters and update local classifier
-
-	// }
 
 
 	/* OPTIMIZATION */
