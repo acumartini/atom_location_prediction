@@ -137,6 +137,7 @@ public:
 		updated = true;  // now safe to access gradient update data
 
 		// update batch_idx
+		printf( "batch_idx %d new_batch_idx %d\n", batch_idx, new_batch_idx );
 		batch_idx = new_batch_idx;
 	}
 
