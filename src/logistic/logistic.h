@@ -99,7 +99,7 @@ public:
 		int new_batch_idx = 0;
 
 		// create Map over input vector based on batch size
-		if ( batch_size != MIN_INT ) { // this is a mini-batch
+		if ( batch_size != INT_MIN ) { // this is a mini-batch
 			if ( batch_idx + batch_size > X.rows() ) {
 				update_size = X.rows() - batch_idx;
 				X_batch = MatMap( X.data() + batch_idx, update_size, X.cols() );
@@ -107,7 +107,7 @@ public:
 			} else {
 				update_size = batch_size;
 				X_batch = MatMap( X.data() + batch_idx, update_size, X.cols() );
-				new_batch_idx = batch_idx + batch_size();
+				new_batch_idx = batch_idx + batch_size;
 			}
 		} else  { // batch processing
 			update_size = X.rows();
