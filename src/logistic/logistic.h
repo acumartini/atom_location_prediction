@@ -137,7 +137,8 @@ public:
 		updated = true;  // now safe to access gradient update data
 
 		// update batch_idx
-		printf( "batch_idx %d new_batch_idx %d\n", batch_idx, new_batch_idx );
+		printf( "update_size %d batch_idx %d new_batch_idx %d\n", 
+			update_size, batch_idx, new_batch_idx );
 		batch_idx = new_batch_idx;
 	}
 
@@ -230,7 +231,6 @@ public:
 	void update_theta () {
 		if ( !updated ) { throw LogisticRegressionError( NO_UPDATE ); } 
 		else {
-			std::cout << "THETA:\n" << theta << "\n";
 			theta.noalias() -= alpha * delta;
 			std::cout << "NEW THETA:\n" << theta << "\n";
 			updated = false; // disallow theta updates until the gradient is re-computed
