@@ -31,7 +31,7 @@ ClassMap classmap; // a map of labels to label indices
 LayerSize numlabels;
 double *delta_data;
 double *X_min_ptr, *X_max_ptr, *X_min_data, *X_max_data;
-bool scaling = false;
+bool scaling = true;
 
 
 // MPI reduce ops
