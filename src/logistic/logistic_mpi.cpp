@@ -90,16 +90,19 @@ int main (int argc, char *argv[]) {
 	} else if ( argc == 5 ) {
 		datadir = argv[1];
 		batch_size = atoi( argv[2] ); // mini-batch processing
+		if ( batch_size == -1 ) { batch_size = INT_MIN; }
 		maxiter = atoi( argv[3] );
 		output_file = argv[4];
 	} else if ( argc == 4 ) {
 		datadir = argv[1];
 		batch_size = atoi( argv[2] ); // mini-batch processing
+		if ( batch_size == -1 ) { batch_size = INT_MIN; }
 		maxiter = atoi( argv[3] );
 		output_file = "LR.model";
 	} else if ( argc == 4 ) {
 		datadir = argv[1];
 		batch_size = atoi( argv[2] ); // mini-batch processing
+		if ( batch_size == -1 ) { batch_size = INT_MIN; }
 		maxiter = 100;
 		output_file = "LR.model";
 	} else {
