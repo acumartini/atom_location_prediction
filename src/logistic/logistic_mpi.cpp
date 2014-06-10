@@ -35,10 +35,10 @@ bool scaling = false;
 
 
 // MPI reduce ops
-void reduce_unique_labels ( int *, int *, int *, MPI_Datatype * );
-void reduce_gradient_update ( double *, double *, int *, MPI_Datatype * );
 void reduce_X_min ( double *, double *, int *, MPI_Datatype * );
 void reduce_X_max ( double *, double *, int *, MPI_Datatype * );
+void reduce_unique_labels ( int *, int *, int *, MPI_Datatype * );
+void reduce_gradient_update ( double *, double *, int *, MPI_Datatype * );
  
 void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dtype )
 {
@@ -59,7 +59,6 @@ void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dt
 
 void reduce_gradient_update( double *delta_in, double *delta_out, int *len, MPI_Datatype *dtype ) {
 	for ( int i=0; i<*len; ++i ) {
-        // printf( "len %d i %d delta_in[i] %f delta_data[i] %f\n", *len, i, delta_in[i], delta_data[i] );
 		delta_out[i] = delta_in[i] + delta_data[i];
 	}
 }
@@ -131,7 +130,7 @@ int main (int argc, char *argv[]) {
 
 
 	/* DATA INITIALIZATION */
-	// randomize instance 
+	// randomize instances
 	std::random_shuffle ( datavec.begin(), datavec.end() );
 
 	// partition data based on taskid
@@ -223,25 +222,18 @@ int main (int argc, char *argv[]) {
 	/* INIT LOCAL CLASSIFIER */
 	LogisticRegression LR_layer( n, numlabels, true );
 
-	// initialize and communicate paramters
-	// if (taskid == MASTER) {
-	// 	// init and send parameters
-
-	// } else {
-	// 	// recieve network parameters and update local classifier
-
-	// }
-
 
 	/* OPTIMIZATION */
-	double grad_mag;
+	int update_size; // stores the number of instances read for each update
+	double grad_mag; // stores the magnitude of the gradient for each update
 	int delta_size = LR_layer.get_theta_size();
 	Vec delta_update = Vec::Zero( delta_size );
+	int global_update_size;
 
 	MPI_Op_create( (MPI_User_function *)reduce_gradient_update, 1, &op );
 	for ( int i=0; i<maxiter; ++i ) {
 		// compute gradient update
-		LR_layer.compute_gradient( X, y );
+		LR_layer.compute_gradient( X, y, batch_size, update_size );
 		delta_data = LR_layer.get_delta().data();
 
 		// sum updates across all partitions
@@ -255,9 +247,12 @@ int main (int argc, char *argv[]) {
 		);
 		LR_layer.set_delta( delta_update );
 
+		// sum the update sizes
+		MPI_Allreduce(&update_size, &global_update_size, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
+
 		// normalize + regularize gradient update
-		LR_layer.normalize_gradient( num_inst );
-		LR_layer.regularize_gradient( num_inst );
+		LR_layer.normalize_gradient( global_update_size );
+		LR_layer.regularize_gradient( global_update_size );
 
 		// update LR_layer parameters
 		if ( LR_layer.converged( grad_mag ) ) { break; }
