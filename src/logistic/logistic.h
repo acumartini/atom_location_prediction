@@ -128,7 +128,7 @@ public:
 			dW = X_batch.transpose() * error_batch;
 			db = error_batch.colwise().sum();
 		} else {
-			dW = X_batch.transpose() * error;
+			dW = X_batch.transpose() * error_batch;
 			dW.noalias() += ( W * lambda ) / X_batch.rows(); // apply regularization
 			db = error_batch.colwise().mean();
 			delta.array() /= X_batch.rows();
@@ -168,6 +168,8 @@ public:
 		if ( theta_update.size() != theta.size() ) {
 			throw LogisticRegressionError( INVALID_THETA_UPDATE );
 		}
+		std::cout << "THETA:\n" << theta << "\n";
+		std::cout << "THETA_UPDATE:\n" << theta_update << "\n";
 		theta << theta_update;
 	}
 

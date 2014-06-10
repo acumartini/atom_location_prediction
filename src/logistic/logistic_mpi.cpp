@@ -252,7 +252,7 @@ int main (int argc, char *argv[]) {
 		LR_layer.set_delta( delta_update );
 
 		// sum the update sizes
-		MPI_Allreduce(&update_size, &global_update_size, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
+		MPI_Allreduce( &update_size, &global_update_size, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
 
 		// normalize + regularize gradient update
 		LR_layer.normalize_gradient( global_update_size );
