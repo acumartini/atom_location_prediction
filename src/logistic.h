@@ -9,6 +9,7 @@
 #define LOGISTIC_H_
 
 #include <stdio.h>
+#include <limits.h>
 
 #define EIGEN_DEFAULT_TO_ROW_MAJOR
 #include "Eigen/Core"
@@ -76,7 +77,9 @@ public:
 
 		distributed( distrib ), // controls parameter update behavior
 
-		updated( false ) // prevent reading unitialized variables
+		updated( false ), // prevent reading unitialized variables
+
+		batch_idx( 0 ) // start reading instance at 0
 	{}
 	~LogisticRegression () {}
 
@@ -89,23 +92,44 @@ public:
 	 * @params: X - matrix of m instances with n_in features
 	 * 			y - matrix of m labels with n_out columns
 	 */
-	void compute_gradient ( const Mat& X, const Mat& y ) {
+	void compute_gradient ( const Mat& X, const Mat& y, int batch_size, int& update_size ) {
 		Mat probas = softmax( (X * W).rowwise() + b ); // compute P( y | X )
 		Mat error = probas - y; // compute the error
+		MatMap X_batch;
+		int new_batch_idx = 0;
+
+		// create Map over input vector based on batch size
+		if ( batch_size != MIN_INT ) { // this is a mini-batch
+			if ( batch_idx + batch_size > X.rows() ) {
+				update_size = X.rows() - batch_idx;
+				X_batch = MatMap( X.data() + batch_idx, update_size, X.cols() );
+				new_batch_idx = 0;
+			} else {
+				update_size = batch_size;
+				X_batch = MatMap( X.data() + batch_idx, update_size, X.cols() );
+				new_batch_idx = batch_idx + batch_size();
+			}
+		} else  { // batch processing
+			update_size = X.rows();
+			X_batch = MatMap( X.data(), X.rows(), X.cols() );
+		}
 
 		// check if the algorithm is used in a distributed setting and only normalize
 		// the gradient if running on a single process
 		if ( distributed ) { 
-			dW = X.transpose() * error;
+			dW = X_batch.transpose() * error;
 			db = error.colwise().sum();
 		} else {
-			dW = X.transpose() * error;
-			dW.noalias() += ( W * lambda ) / X.rows(); // apply regularization
+			dW = X_batch.transpose() * error;
+			dW.noalias() += ( W * lambda ) / X_batch.rows(); // apply regularization
 			db = error.colwise().mean();
-			delta.array() /= X.rows();
+			delta.array() /= X_batch.rows();
 		}
 
 		updated = true;  // now safe to access gradient update data
+
+		// update batch_idx
+		batch_idx = new_batch_idx;
 	}
 
 	/*
@@ -238,6 +262,7 @@ private:
 	MatMap W, dW;
 	VecMap b, db;
 	bool distributed, updated;
+	int batch_idx;
 
 	// update parameters
 	float alpha = 0.9, lambda = 0.0, epsilon = 0.00001;
