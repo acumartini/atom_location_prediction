@@ -122,9 +122,6 @@ public:
 		// create a map over the instance data for the current batch/mini-batch
 		MatMap X_batch = MatMap( X_update_start, update_size, X.cols() );
 		MatMap error_batch = MatMap( error_update_start, update_size, error.cols() );
-		// printf( "batch_size %d update_size %d\n", batch_size, update_size );
-		// std::cout << "X_batch\n" << X_batch << "\n";
-		// std::cout << "error_batch\n" << error_batch << "\n";
 
 		// check if the algorithm is used in a distributed setting and only normalize
 		// the gradient if running on a single process
@@ -236,7 +233,6 @@ public:
 		if ( !updated ) { throw LogisticRegressionError( NO_UPDATE ); } 
 		else {
 			theta.noalias() -= alpha * delta;
-			std::cout << "NEW THETA:\n" << theta << "\n";
 			updated = false; // disallow theta updates until the gradient is re-computed
 		}
 	}
