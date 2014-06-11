@@ -107,7 +107,7 @@ int main (int argc, char *argv[]) {
 	std::cout << probas << std::endl;
 
 	// predict class vector
-	printf( "\nClass Prdiction Vector:\n");
+	printf( "\nClass Prediction Vector:\n");
 	Vec pred = clf.predict( X );
 	std::cout << pred << std::endl;
 	
