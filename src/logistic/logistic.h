@@ -92,43 +92,57 @@ public:
 	 * @params: X - matrix of m instances with n_in features
 	 * 			y - matrix of m labels with n_out columns
 	 */
-	void compute_gradient ( const Mat& X, const Mat& y, int batch_size, int& update_size ) {
+	void compute_gradient ( Mat& X, Mat& y, int batch_size, int& update_size ) {
 		Mat probas = softmax( (X * W).rowwise() + b ); // compute P( y | X )
 		Mat error = probas - y; // compute the error
-		MatMap X_batch;
+		double *X_update_start, *error_update_start;
 		int new_batch_idx = 0;
 
-		// create Map over input vector based on batch size
-		if ( batch_size != MIN_INT ) { // this is a mini-batch
-			if ( batch_idx + batch_size > X.rows() ) {
+		// compute data pointers and batch size variables
+		if ( batch_size != INT_MIN && batch_size < X.rows() ) { // this is a mini-batch
+			X_update_start = X.data() + batch_idx;
+			error_update_start = error.data() + batch_idx;
+			if ( batch_idx == X.rows() ) {
+				X_update_start = X.data();
+				update_size = batch_size;
+				new_batch_idx = batch_size;
+			} else if ( batch_idx + batch_size > X.rows() ) {
 				update_size = X.rows() - batch_idx;
-				X_batch = MatMap( X.data() + batch_idx, update_size, X.cols() );
 				new_batch_idx = 0;
 			} else {
 				update_size = batch_size;
-				X_batch = MatMap( X.data() + batch_idx, update_size, X.cols() );
-				new_batch_idx = batch_idx + batch_size();
+				new_batch_idx = batch_idx + batch_size;
 			}
 		} else  { // batch processing
+			X_update_start = X.data();
+			error_update_start = error.data();
 			update_size = X.rows();
-			X_batch = MatMap( X.data(), X.rows(), X.cols() );
 		}
+
+		// create a map over the instance data for the current batch/mini-batch
+		MatMap X_batch = MatMap( X_update_start, update_size, X.cols() );
+		MatMap error_batch = MatMap( error_update_start, update_size, error.cols() );
+		// printf( "batch_size %d update_size %d\n", batch_size, update_size );
+		// std::cout << "X_batch\n" << X_batch << "\n";
+		// std::cout << "error_batch\n" << error_batch << "\n";
 
 		// check if the algorithm is used in a distributed setting and only normalize
 		// the gradient if running on a single process
 		if ( distributed ) { 
-			dW = X_batch.transpose() * error;
-			db = error.colwise().sum();
+			dW = X_batch.transpose() * error_batch;
+			db = error_batch.colwise().sum();
 		} else {
-			dW = X_batch.transpose() * error;
+			dW = X_batch.transpose() * error_batch;
 			dW.noalias() += ( W * lambda ) / X_batch.rows(); // apply regularization
-			db = error.colwise().mean();
+			db = error_batch.colwise().mean();
 			delta.array() /= X_batch.rows();
 		}
 
 		updated = true;  // now safe to access gradient update data
 
 		// update batch_idx
+		printf( "update_size %d batch_idx %d new_batch_idx %d\n", 
+			update_size, batch_idx, new_batch_idx );
 		batch_idx = new_batch_idx;
 	}
 
@@ -222,6 +236,7 @@ public:
 		if ( !updated ) { throw LogisticRegressionError( NO_UPDATE ); } 
 		else {
 			theta.noalias() -= alpha * delta;
+			std::cout << "NEW THETA:\n" << theta << "\n";
 			updated = false; // disallow theta updates until the gradient is re-computed
 		}
 	}

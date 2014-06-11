@@ -31,7 +31,7 @@ ClassMap classmap; // a map of labels to label indices
 LayerSize numlabels;
 double *delta_data;
 double *X_min_ptr, *X_max_ptr, *X_min_data, *X_max_data;
-bool scaling = false;
+bool scaling = true;
 
 
 // MPI reduce ops
@@ -90,16 +90,19 @@ int main (int argc, char *argv[]) {
 	} else if ( argc == 5 ) {
 		datadir = argv[1];
 		batch_size = atoi( argv[2] ); // mini-batch processing
+		if ( batch_size == -1 ) { batch_size = INT_MIN; }
 		maxiter = atoi( argv[3] );
 		output_file = argv[4];
 	} else if ( argc == 4 ) {
 		datadir = argv[1];
 		batch_size = atoi( argv[2] ); // mini-batch processing
+		if ( batch_size == -1 ) { batch_size = INT_MIN; }
 		maxiter = atoi( argv[3] );
 		output_file = "LR.model";
 	} else if ( argc == 4 ) {
 		datadir = argv[1];
 		batch_size = atoi( argv[2] ); // mini-batch processing
+		if ( batch_size == -1 ) { batch_size = INT_MIN; }
 		maxiter = 100;
 		output_file = "LR.model";
 	} else {
@@ -177,6 +180,7 @@ int main (int argc, char *argv[]) {
 		// scale features using global min and max
 		mlu::scale_features( X, X_min, X_max, 1, 0 );
     }
+    // std::cout << "X\n" << X << "\n";
 
 
 	/* FORMAT LABELS */
@@ -248,7 +252,7 @@ int main (int argc, char *argv[]) {
 		LR_layer.set_delta( delta_update );
 
 		// sum the update sizes
-		MPI_Allreduce(&update_size, &global_update_size, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
+		MPI_Allreduce( &update_size, &global_update_size, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
 
 		// normalize + regularize gradient update
 		LR_layer.normalize_gradient( global_update_size );
