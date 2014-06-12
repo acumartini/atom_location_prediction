@@ -62,7 +62,7 @@ void reduce_gradient_update( double *delta_in, double *delta_out, int *len, MPI_
 	VecMap in( delta_in, *len );
 	VecMap out( delta_out, *len );
 
-	out = in + out;
+	out = data + in;
 	
 	std::cout << "data\n" << data << "\n";
 	std::cout << "in\n" << in << "\n";
