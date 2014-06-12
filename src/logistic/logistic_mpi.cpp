@@ -32,6 +32,7 @@ LayerSize numlabels;
 double *delta_data;
 double *X_min_ptr, *X_max_ptr, *X_min_data, *X_max_data;
 bool scaling = true;
+int taskid;
 
 
 // MPI reduce ops
@@ -123,7 +124,7 @@ int main (int argc, char *argv[]) {
 	}
 
 	// initialize/populate mpi specific vars local to each node
-	int  numtasks, taskid, len;
+	int  numtasks, len; //taskid, len;
 	char hostname[MPI_MAX_PROCESSOR_NAME];
 
 	MPI_Init(&argc, &argv);
