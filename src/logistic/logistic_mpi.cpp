@@ -37,7 +37,7 @@ bool scaling = true; // enable feature scaling
 // MPI reduce ops
 void reduce_unique_labels ( int *, int *, int *, MPI_Datatype * );
  
-void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dtype )
+void reduce_unique_labels( int *invec, int *outvec, int *len, MPI_Datatype *dtype )
 {
 	int label;
     ClassSet merge;
@@ -50,7 +50,7 @@ void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dt
     }
     int idx = 0;
     for ( auto& elem : merge ) {
-    	inoutvec[idx++] = elem;
+    	outvec[idx++] = elem;
     }
 }
 
@@ -168,14 +168,15 @@ int main (int argc, char *argv[]) {
 
 	// allreduce to obtain global unique label set
 	int unique_labels[max_size];
+	int global_unique_labels[max_size];
 	for ( int i=0; i<max_size; ++i ) {
 		unique_labels[i] = -1;
+		global_unique_labels[i] = -1;
 	}
 	int idx = 0;
 	for ( auto& kv : classmap ) {
 		unique_labels[idx++] = kv.first;
 	}
-	int global_unique_labels[max_size];
 	MPI_Op_create( (MPI_User_function *)reduce_unique_labels, 1, &op );
 	MPI_Allreduce( unique_labels, global_unique_labels, max_size, MPI_INT, op, MPI_COMM_WORLD );
 	MPI_Op_free( &op );
