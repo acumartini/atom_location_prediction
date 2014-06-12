@@ -39,7 +39,6 @@ int taskid;
 void reduce_X_min ( double *, double *, int *, MPI_Datatype * );
 void reduce_X_max ( double *, double *, int *, MPI_Datatype * );
 void reduce_unique_labels ( int *, int *, int *, MPI_Datatype * );
-void reduce_gradient_update ( double *, double *, int *, MPI_Datatype * );
  
 void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dtype )
 {
@@ -56,20 +55,6 @@ void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dt
     for ( auto& elem : merge ) {
     	inoutvec[idx++] = elem;
     }
-}
-
-void reduce_gradient_update( double *delta_in, double *delta_out, int *len, MPI_Datatype *dtype ) {
-	VecMap data( delta_data, *len );
-	VecMap in( delta_in, *len );
-	VecMap out( delta_out, *len );
-
-	std::cout << "\ntaskid " << taskid << " IN\n" << in << "\n";
-	std::cout << "taskid " << taskid << " DATA BEFORE\n" << data << "\n";
-
-	out = data + in;
-	data << out;
-	
-	std::cout << "taskid " << taskid << " DATA AFTER\n" << data << "\n\n";
 }
 
 void reduce_X_min( double *X_min_in, double *X_min_out, int *len, MPI_Datatype *dtype ) {
@@ -175,7 +160,7 @@ int main (int argc, char *argv[]) {
     	Vec X_min_tmp = X.colwise().minCoeff();
     	X_min_data = X_min_tmp.data();
     	Vec X_min = Vec( X_min_tmp.size() );
-		MPI_Allreduce( X_min_tmp.data(), X_min.data(), X_min_tmp.size(), MPI_DOUBLE, op, MPI_COMM_WORLD );
+		MPI_Allreduce( X_min_tmp.data(), X_min.data(), X_min_tmp.size(), MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD );
 		MPI_Op_free( &op );
 
     	// Allreduce to find global max
@@ -183,13 +168,12 @@ int main (int argc, char *argv[]) {
 		Vec X_max_tmp = X.colwise().maxCoeff();
 		X_max_data = X_max_tmp.data();
 		Vec X_max = Vec( X_max_tmp.size() );
-		MPI_Allreduce( X_max_tmp.data(), X_max.data(), X_max_tmp.size(), MPI_DOUBLE, op, MPI_COMM_WORLD );
+		MPI_Allreduce( X_max_tmp.data(), X_max.data(), X_max_tmp.size(), MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
 		MPI_Op_free( &op );
 
 		// scale features using global min and max
 		mlu::scale_features( X, X_min, X_max, 1, 0 );
     }
-    // std::cout << "X\n" << X << "\n";
 
 
 	/* FORMAT LABELS */
@@ -243,7 +227,6 @@ int main (int argc, char *argv[]) {
 	Vec delta_update = Vec::Zero( delta_size );
 	int global_update_size;
 
-	MPI_Op_create( (MPI_User_function *)reduce_gradient_update, 1, &op );
 	for ( int i=0; i<maxiter; ++i ) {
 		// compute gradient update
 		LR_layer.compute_gradient( X, y, batch_size, update_size, taskid );
@@ -255,11 +238,9 @@ int main (int argc, char *argv[]) {
 			delta_update.data(),
 			delta_size,
 			MPI_DOUBLE,
-			// op,
 			MPI_SUM,
 			MPI_COMM_WORLD
 		);
-		// std::cout << "\nFINAL OUT taskid" << taskid << "\n" << delta_update << "\n";
 		LR_layer.set_delta( delta_update );
 
 		// sum the update sizes
@@ -276,7 +257,6 @@ int main (int argc, char *argv[]) {
 		}
 		LR_layer.update_theta();
 	}
-	MPI_Op_free( &op );
 
 
 	/* MODEL STORAGE */

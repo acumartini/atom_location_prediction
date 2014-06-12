@@ -92,7 +92,7 @@ public:
 	 * @params: X - matrix of m instances with n_in features
 	 * 			y - matrix of m labels with n_out columns
 	 */
-	void compute_gradient ( Mat& X, Mat& y, int batch_size, int& update_size, int taskid ) {
+	void compute_gradient ( Mat& X, Mat& y, int batch_size, int& update_size ) {
 		Mat probas = softmax( (X * W).rowwise() + b ); // compute P( y | X )
 		Mat error = probas - y; // compute the error
 		double *X_update_start, *error_update_start;
@@ -123,14 +123,12 @@ public:
 		// create a map over the instance data for the current batch/mini-batch
 		MatMap X_batch = MatMap( X_update_start, update_size, X.cols() );
 		MatMap error_batch = MatMap( error_update_start, update_size, error.cols() );
-		// std::cout << "UPDATE taskid " << taskid << "\n" << X_batch << "\n" << error_batch << "\n\n";
 
 		// check if the algorithm is used in a distributed setting and only normalize
 		// the gradient if running on a single process
 		if ( distributed ) { 
 			dW = X_batch.transpose() * error_batch;
 			db = error_batch.colwise().sum();
-			// std::cout << "dW\n" << dW << "\n" << "db\n" << db << "\n\n";
 		} else {
 			dW = X_batch.transpose() * error_batch;
 			dW.noalias() += ( W * lambda ) / X_batch.rows(); // apply regularization
