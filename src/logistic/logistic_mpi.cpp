@@ -121,7 +121,7 @@ int main (int argc, char *argv[]) {
 	size_t div = datavec.size() / numtasks;
 	ProbSize limit = ( taskid == numtasks - 1 ) ? num_inst : div * ( taskid + 1 );
 	m = limit - div * taskid;
-	printf( "limit %d m %lu\n", limit, m );
+	printf( "limit %lu m %lu\n", limit, m );
 
     // danamically allocate data
 	Mat X( m, n );
