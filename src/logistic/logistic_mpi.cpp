@@ -63,13 +63,13 @@ void reduce_gradient_update( double *delta_in, double *delta_out, int *len, MPI_
 	VecMap in( delta_in, *len );
 	VecMap out( delta_out, *len );
 
+	std::cout << "\ntaskid " << taskid << " IN\n" << in << "\n";
 	std::cout << "taskid " << taskid << " DATA BEFORE\n" << data << "\n";
 
 	out = data + in;
 	data << out;
 	
-	std::cout << "taskid " << taskid << " DATA AFTER\n" << data << "\n";
-	std::cout << "taskid " << taskid << " IN\n" << in << "\n";
+	std::cout << "taskid " << taskid << " DATA AFTER\n" << data << "\n\n";
 }
 
 void reduce_X_min( double *X_min_in, double *X_min_out, int *len, MPI_Datatype *dtype ) {
