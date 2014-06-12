@@ -123,14 +123,14 @@ public:
 		// create a map over the instance data for the current batch/mini-batch
 		MatMap X_batch = MatMap( X_update_start, update_size, X.cols() );
 		MatMap error_batch = MatMap( error_update_start, update_size, error.cols() );
-		std::cout << "UPDATE taskid " << taskid << "\n" << X_batch << "\n" << error_batch << "\n\n";
+		// std::cout << "UPDATE taskid " << taskid << "\n" << X_batch << "\n" << error_batch << "\n\n";
 
 		// check if the algorithm is used in a distributed setting and only normalize
 		// the gradient if running on a single process
 		if ( distributed ) { 
 			dW = X_batch.transpose() * error_batch;
 			db = error_batch.colwise().sum();
-			std::cout << "dW\n" << dW << "\n" << "db\n" << db << "\n\n";
+			// std::cout << "dW\n" << dW << "\n" << "db\n" << db << "\n\n";
 		} else {
 			dW = X_batch.transpose() * error_batch;
 			dW.noalias() += ( W * lambda ) / X_batch.rows(); // apply regularization
@@ -149,7 +149,6 @@ public:
 	 * of instances.
 	 */
 	void normalize_gradient( const ProbSize& m ) {
-		printf( "NORMALIZE m %lu\n", m );
 		delta.array() /= m;
 	}
 
