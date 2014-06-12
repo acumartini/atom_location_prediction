@@ -1,8 +1,13 @@
 \section{Development and Implementation}
+\label{development}
 
 Our development efforts are divided into sections based on our data flow architecture.  There is some overlap of effort in the data preprocessing step as this is the area of our development where Simulation and Machine Learning meet.  We describe each development stage in detail in the following subsections.
 
 \subsection{Simulation}
+
+Wes talks about simulations here ...
+
+OLD TEXT:
 The essence of the simulation is starting with a flourescent atom at a chosen location, and then simulating how light emitted from the atom appears on the CCD. There are two approaches to simulating the generation of CCD images from a given atom location.
 
 The first is a classical raytracing approach. Rays are emitted in a random direction from the atom, and obey refraction via Snell's Law as they pass interfaces between different materials. The rays also contain phase information for the purposes of determining interference. When the rays intersect with the CCD plane, we increment an array value corresponding to which CCD pixel it hit.
@@ -13,7 +18,7 @@ The second approach is a full simulation of the linear wave equation. This is a 
 
 Ran talks about filtering here...
 
-The feature scaling step is handled in the logistic regression classifier as it is a simple extension to data loading after the instance have been loaded into memory.  We use efficient a templated C++ library (Eigen \cite{Eigen}) that provides efficient matrix operations that can quickly perform the broadcasting operations necessary for feature scaling.  In addition, the distributed implementation of our algorithm lends itself well to efficient data partitioning, which ensures that this preprocessing step will scale.  However, feature scaling in a distributed setting is slightly more complex in that it requires knowledge of the global min and max for the entire dataset across all nodes.  The min/max vectors is quickly computed using an Allreduce step with MPI's MIN/MAX reduction operators. Each node then formats its section of the data using a single call feature scaling utility function.
+The feature scaling step is handled in the logistic regression classifier as it is a simple extension to data loading after the instance have been loaded into memory.  We use efficient a C++ template library for linear algebra \cite{Eigen} that provides efficient matrix operations that can quickly perform the broadcasting operations necessary for feature scaling.  In addition, the distributed implementation of our algorithm lends itself well to efficient data partitioning, which ensures that this preprocessing step will scale.  However, feature scaling in a distributed setting is slightly more complex in that it requires knowledge of the global min and max for the entire dataset across all nodes.  The min/max vectors is quickly computed using an Allreduce step with MPI's MIN/MAX reduction operators. Each node then formats its section of the data using a single call feature scaling utility function.
 
 \subsection{Machine Learning}
 We have developed a distributed logistic regression classifier using MPI to train on massive amounts of data efficient.  The classifier is capable of multi-class classification and mini-batch processing.  During training, nodes communicate with each other to both build the model and perform parameter updates.

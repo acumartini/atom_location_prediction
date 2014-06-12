@@ -3,23 +3,22 @@ Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: atom_loc_pred_report.aux
 The style file: plain.bst
 Database file #1: references.bib
-Warning--to sort, need author or key in Eigen
 You've used 1 entry,
             2118 wiz_defined-function locations,
-            501 strings with 4093 characters,
-and the built_in function-call counts, 179 in all, are:
+            501 strings with 4142 characters,
+and the built_in function-call counts, 178 in all, are:
 = -- 15
 > -- 1
 < -- 0
 + -- 1
 - -- 0
-* -- 7
+* -- 6
 := -- 26
 add.period$ -- 2
 call.type$ -- 1
-change.case$ -- 3
+change.case$ -- 4
 chr.to.int$ -- 0
-cite$ -- 2
+cite$ -- 1
 duplicate$ -- 7
 empty$ -- 24
 format.name$ -- 0
@@ -29,11 +28,11 @@ int.to.str$ -- 1
 missing$ -- 0
 newline$ -- 7
 num.names$ -- 0
-pop$ -- 8
+pop$ -- 7
 preamble$ -- 1
-purify$ -- 2
+purify$ -- 3
 quote$ -- 0
-skip$ -- 8
+skip$ -- 9
 stack$ -- 0
 substring$ -- 5
 swap$ -- 1
@@ -41,8 +40,7 @@ text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 4
-warning$ -- 1
+warning$ -- 0
 while$ -- 0
 width$ -- 2
 write$ -- 9
-(There was 1 warning)

@@ -1,7 +1,7 @@
 \begin{thebibliography}{1}
 
 \bibitem{Eigen}
-{Eigen Linerar Algebra Library}.
-\newblock \\ \url{http://NOINTERNET...}
+{Eigen C++ Template Library for Linerar Algebra}.
+\newblock \\ \url{http://eigen.tuxfamily.org/index.php?title=Main_Page}.
 
 \end{thebibliography}
