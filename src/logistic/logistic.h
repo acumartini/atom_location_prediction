@@ -148,6 +148,7 @@ public:
 	 * of instances.
 	 */
 	void normalize_gradient( const ProbSize& m ) {
+		printf( "NORMALIZE m %lu\n", m );
 		delta.array() /= m;
 	}
 
