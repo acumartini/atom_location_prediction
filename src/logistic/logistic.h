@@ -96,12 +96,13 @@ public:
 		Mat probas = softmax( (X * W).rowwise() + b ); // compute P( y | X )
 		Mat error = probas - y; // compute the error
 		double *X_update_start, *error_update_start;
-		int new_batch_idx = 0;
+		int offset, new_batch_idx = 0;
 
 		// compute data pointers and batch size variables
 		if ( batch_size != INT_MIN && batch_size < X.rows() ) { // this is a mini-batch
-			X_update_start = X.data() + batch_idx;
-			error_update_start = error.data() + batch_idx;
+			offset = batch_idx * X.cols();
+			X_update_start = X.data() + offset;
+			error_update_start = error.data() + offset;
 			if ( batch_idx == X.rows() ) {
 				X_update_start = X.data();
 				update_size = batch_size;
