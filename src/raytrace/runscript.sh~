@@ -1,0 +1,25 @@
+#!/bin/bash
+
+outputfolder="./data/"
+outputfile=$1
+gridmax=$2
+
+pstart=$3
+pstep=$4
+
+ext_points=".pts"
+ext_data=".dat"
+
+for (( j=0; j<$gridmax; j++ ))
+do
+    for (( i=0; i<$gridmax; i++ ))
+    do
+ 	label=$(( gridmax * j + i ))
+	px=$(( pstart + i * pstep ))
+	py=$(( pstart + j * pstep ))
+	echo "Running: ./a " $i $j $label $px $py 
+	echo "$outputfolder$label$ext_points"
+	echo "$outputfolder$label$ext_data"
+	./a6 $label $px $py 0 .6 .06 .6 .06 1> "$outputfolder$label$ext_points" 2> "$outputfolder$label$ext_data"
+    done
+done

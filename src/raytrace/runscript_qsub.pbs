@@ -1,0 +1,20 @@
+#!/bin/bash
+
+#PBS -V
+
+#LAUNCHED INNER LOOP
+for (( k=0; k<$modgridmax; k++ ))
+do
+    for (( l=0; l<$modgridmax; l++ ))
+    do
+	echo "--- Running: ./a " $i $j $label $px $py 
+	pxmod=$( echo "$px + $pmodstart + $l * $pmodstep" | bc )
+	pymod=$( echo "$py + $pmodstart + $k * $pmodstep" | bc )
+	
+	#hack to make line breaks in files
+	echo "" >> "$outputfolder$label$ext_points"
+	echo "" >> "$outputfolder$label$ext_data"
+	$raytrace_command $label $px $py $RAYZ $THETARANGE $DTHETA $PHIRANGE $DPHI >> "$outputfolder$label$ext_points" 2>> "$outputfolder$label$ext_data"
+
+    done
+done

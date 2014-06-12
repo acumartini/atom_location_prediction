@@ -137,7 +137,7 @@ bool cast_ray(Vec source, Flt theta, Flt phi, int * finalx, int * finaly){
       cout << output_ray.P << "\n\n";
       //      cerr << "Refracted ray i=" << i << "\n";
     } else {
-      cerr << "ERROR: 2 DID NOT Refract ray theta=" << theta << " phi=" << phi << "\n";
+      //      cerr << "ERROR: 2 DID NOT Refract ray theta=" << theta << " phi=" << phi << "\n";
     }
 
     // Third Intersection
@@ -150,7 +150,7 @@ bool cast_ray(Vec source, Flt theta, Flt phi, int * finalx, int * finaly){
       cout << output_ray.P << "\n\n";
       //      cerr << "Refracted ray i=" << i << "\n";
     } else {
-      cerr << "ERROR: 3 DID NOT Refract ray theta=" << theta << " phi=" << phi << "\n";
+      //      cerr << "ERROR: 3 DID NOT Refract ray theta=" << theta << " phi=" << phi << "\n";
     }
 
     // Fourth Intersection
@@ -163,7 +163,7 @@ bool cast_ray(Vec source, Flt theta, Flt phi, int * finalx, int * finaly){
       cout << output_ray.P << "\n\n";
       //      cerr << "Refracted ray i=" << i << "\n";
     } else {
-      cerr << "ERROR: 4 DID NOT Refract ray theta=" << theta << " phi=" << phi << "\n";
+      //      cerr << "ERROR: 4 DID NOT Refract ray theta=" << theta << " phi=" << phi << "\n";
     }
 
     // Fifth Intersection
@@ -176,7 +176,7 @@ bool cast_ray(Vec source, Flt theta, Flt phi, int * finalx, int * finaly){
       cout << output_ray.P << "\n\n";
       //      cerr << "Refracted ray i=" << i << "\n";
     } else {
-      cerr << "ERROR: 5 DID NOT Refract ray theta=" << theta << " phi=" << phi << "\n";
+      //      cerr << "ERROR: 5 DID NOT Refract ray theta=" << theta << " phi=" << phi << "\n";
     }
 
     // Do binning into CCD pixels
