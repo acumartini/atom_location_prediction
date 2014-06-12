@@ -101,9 +101,10 @@ public:
 		// compute data pointers and batch size variables
 		if ( batch_size != INT_MIN && batch_size < X.rows() ) { // this is a mini-batch
 			X_update_start = X.data() + ( batch_idx * X.cols() );
-			error_update_start = error.data() + ( batch_idx + error.cols() );
+			error_update_start = error.data() + ( batch_idx * error.cols() );
 			if ( batch_idx == X.rows() ) {
 				X_update_start = X.data();
+				error_update_start = error.data();
 				update_size = batch_size;
 				new_batch_idx = batch_size;
 			} else if ( batch_idx + batch_size > X.rows() ) {
