@@ -118,11 +118,11 @@ public:
 			error_update_start = error.data();
 			update_size = X.rows();
 		}
-		std::cout << "UPDATE taskid " << taskid << "\n" << X_batch << "\n" << error_batch << "\n\n";
 
 		// create a map over the instance data for the current batch/mini-batch
 		MatMap X_batch = MatMap( X_update_start, update_size, X.cols() );
 		MatMap error_batch = MatMap( error_update_start, update_size, error.cols() );
+		std::cout << "UPDATE taskid " << taskid << "\n" << X_batch << "\n" << error_batch << "\n\n";
 
 		// check if the algorithm is used in a distributed setting and only normalize
 		// the gradient if running on a single process
