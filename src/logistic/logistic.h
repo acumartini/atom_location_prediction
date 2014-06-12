@@ -196,10 +196,7 @@ public:
 	 * Returns the current delta (gradient) vector.
 	 */
 	Vec& get_delta () { 
-		if ( !updated ) { throw LogisticRegressionError( NO_UPDATE ); }
-		else {
-			return delta; 
-		}
+		return delta; 
 	}
 
 	/*
