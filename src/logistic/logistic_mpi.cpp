@@ -67,7 +67,7 @@ void reduce_gradient_update( double *delta_in, double *delta_out, int *len, MPI_
 	
 	std::cout << "taskid " << taskid << " DATA\n" << data << "\n";
 	std::cout << "taskid " << taskid << " IN\n" << in << "\n";
-	std::cout << "taskid " << taskid << " OUT\n" << out << "\n";
+	std::cout << "taskid " << taskid << " OUT\n" << out << "\n\n";
 
 	// for ( int i=0; i<*len; ++i ) {
 	// 	delta_out[i] = delta_in[i] + delta_data[i];
@@ -260,7 +260,7 @@ int main (int argc, char *argv[]) {
 			op,
 			MPI_COMM_WORLD
 		);
-		std::cout << "FINAL OUT taskid" << taskid << "\n" << delta_update << "\n";
+		std::cout << "\nFINAL OUT taskid" << taskid << "\n" << delta_update << "\n";
 		LR_layer.set_delta( delta_update );
 
 		// sum the update sizes
