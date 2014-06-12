@@ -36,8 +36,6 @@ int taskid;
 
 
 // MPI reduce ops
-void reduce_X_min ( double *, double *, int *, MPI_Datatype * );
-void reduce_X_max ( double *, double *, int *, MPI_Datatype * );
 void reduce_unique_labels ( int *, int *, int *, MPI_Datatype * );
  
 void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dtype )
@@ -55,18 +53,6 @@ void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dt
     for ( auto& elem : merge ) {
     	inoutvec[idx++] = elem;
     }
-}
-
-void reduce_X_min( double *X_min_in, double *X_min_out, int *len, MPI_Datatype *dtype ) {
-	for ( int i=0; i<*len; ++i ) {
-		X_min_out[i] = std::min( X_min_in[i], X_min_data[i] );
-	}
-}
-
-void reduce_X_max( double *X_max_in, double *X_max_out, int *len, MPI_Datatype *dtype ) {
-	for ( int i=0; i<*len; ++i ) {
-		X_max_out[i] = std::max( X_max_in[i], X_max_data[i] );
-	}
 }
 
 
@@ -156,20 +142,16 @@ int main (int argc, char *argv[]) {
     // perform feature scaling (optional)
     if ( scaling ) {
     	// Allreduce to find global min
-    	MPI_Op_create( (MPI_User_function *)reduce_X_min, 1, &op );
     	Vec X_min_tmp = X.colwise().minCoeff();
     	X_min_data = X_min_tmp.data();
     	Vec X_min = Vec( X_min_tmp.size() );
 		MPI_Allreduce( X_min_tmp.data(), X_min.data(), X_min_tmp.size(), MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD );
-		MPI_Op_free( &op );
 
     	// Allreduce to find global max
-    	MPI_Op_create( (MPI_User_function *)reduce_X_max, 1, &op );
 		Vec X_max_tmp = X.colwise().maxCoeff();
 		X_max_data = X_max_tmp.data();
 		Vec X_max = Vec( X_max_tmp.size() );
 		MPI_Allreduce( X_max_tmp.data(), X_max.data(), X_max_tmp.size(), MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
-		MPI_Op_free( &op );
 
 		// scale features using global min and max
 		mlu::scale_features( X, X_min, X_max, 1, 0 );
