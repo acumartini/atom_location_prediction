@@ -254,7 +254,7 @@ int main (int argc, char *argv[]) {
 			op,
 			MPI_COMM_WORLD
 		);
-		std::cout << "\nFINAL OUT taskid" << taskid << "\n" << delta_update << "\n";
+		std::cout << "\nFINAL OUT taskid" << taskid << "\n" << LR_layer.get_delta() << "\n";
 		LR_layer.set_delta( delta_data );
 		// LR_layer.set_delta( delta_update );
 
