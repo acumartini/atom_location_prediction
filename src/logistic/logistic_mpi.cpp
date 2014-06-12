@@ -229,7 +229,7 @@ int main (int argc, char *argv[]) {
 
 	for ( int i=0; i<maxiter; ++i ) {
 		// compute gradient update
-		LR_layer.compute_gradient( X, y, batch_size, update_size, taskid );
+		LR_layer.compute_gradient( X, y, batch_size, update_size );
 		delta_data = LR_layer.get_delta().data();
 
 		// sum updates across all partitions
