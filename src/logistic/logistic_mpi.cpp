@@ -236,13 +236,14 @@ int main (int argc, char *argv[]) {
 	double grad_mag; // stores the magnitude of the gradient for each update
 	int delta_size = LR_layer.get_theta_size();
 	//Vec delta_update = Vec::Zero( delta_size );
+	double *delta_data = LR_layer.get_delta().data();
 	int global_update_size;
 
 	MPI_Op_create( (MPI_User_function *)reduce_gradient_update, 1, &op );
 	for ( int i=0; i<maxiter; ++i ) {
 		// compute gradient update
 		LR_layer.compute_gradient( X, y, batch_size, update_size );
-		delta_data = LR_layer.get_delta().data();
+		//delta_data = LR_layer.get_delta().data();
 
 		// sum updates across all partitions
 		MPI_Allreduce( 
