@@ -106,7 +106,7 @@ int main (int argc, char *argv[]) {
 	// determine number of instances
 	DataVec datavec;
 	mlu::count_instances( datadir, datavec, num_inst );
-	printf( "taskid %d num_inst %lu\n", task_id, num_ist );
+	printf( "taskid %d num_inst %lu\n", task_id, num_inst );
 
 	// determine number of features
 	mlu::count_features( datadir, n );
