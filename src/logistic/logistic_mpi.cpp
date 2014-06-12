@@ -64,9 +64,9 @@ void reduce_gradient_update( double *delta_in, double *delta_out, int *len, MPI_
 
 	out = data + in;
 	
-	std::cout << "data\n" << data << "\n";
-	std::cout << "in\n" << in << "\n";
-	std::cout << "out\n" << out << "\n";
+	std::cout << "taskid " << taskid << " DATA\n" << data << "\n";
+	std::cout << "taskid " << taskid << " IN\n" << in << "\n";
+	std::cout << "taskid " << taskid << " OUT\n" << out << "\n";
 
 	// for ( int i=0; i<*len; ++i ) {
 	// 	delta_out[i] = delta_in[i] + delta_data[i];
