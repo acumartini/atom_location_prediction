@@ -143,7 +143,7 @@ int main (int argc, char *argv[]) {
 
 	/* DATA INITIALIZATION */
 	// randomize instances
-	std::random_shuffle ( datavec.begin(), datavec.end() );
+	std::random_shuffle( datavec.begin(), datavec.end() );
 
 	// partition data based on taskid
 	size_t div = datavec.size() / numtasks;
@@ -255,7 +255,8 @@ int main (int argc, char *argv[]) {
 			delta_update.data(),
 			delta_size,
 			MPI_DOUBLE,
-			op,
+			// op,
+			MPI_SUM,
 			MPI_COMM_WORLD
 		);
 		// std::cout << "\nFINAL OUT taskid" << taskid << "\n" << delta_update << "\n";
