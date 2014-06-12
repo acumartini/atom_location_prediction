@@ -256,7 +256,7 @@ int main (int argc, char *argv[]) {
 			MPI_COMM_WORLD
 		);
 		std::cout << "\nFINAL OUT taskid" << taskid << "\n" << LR_layer.get_delta() << "\n";
-		LR_layer.set_delta( delta_data );
+		//LR_layer.set_delta( delta_data );
 		// LR_layer.set_delta( delta_update );
 
 		// sum the update sizes
