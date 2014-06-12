@@ -29,7 +29,6 @@ ProbSize num_inst, m, n; // numbers of instance and features
 size_t begin, end; // where to index the datavec for each partition
 ClassMap classmap; // a map of labels to label indices
 LayerSize numlabels;
-double *delta_data;
 double *X_min_ptr, *X_max_ptr, *X_min_data, *X_max_data;
 bool scaling = true;
 int taskid;
@@ -59,19 +58,13 @@ void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dt
 }
 
 void reduce_gradient_update( double *delta_in, double *delta_out, int *len, MPI_Datatype *dtype ) {
-	VecMap data( delta_data, *len );
 	VecMap in( delta_in, *len );
 	VecMap out( delta_out, *len );
 
-	out = data + in;
+	out += in;
 	
-	std::cout << "taskid " << taskid << " DATA\n" << data << "\n";
 	std::cout << "taskid " << taskid << " IN\n" << in << "\n";
 	std::cout << "taskid " << taskid << " OUT\n" << out << "\n\n";
-
-	// for ( int i=0; i<*len; ++i ) {
-	// 	delta_out[i] = delta_in[i] + delta_data[i];
-	// }
 }
 
 void reduce_X_min( double *X_min_in, double *X_min_out, int *len, MPI_Datatype *dtype ) {
@@ -242,7 +235,7 @@ int main (int argc, char *argv[]) {
 	int update_size; // stores the number of instances read for each update
 	double grad_mag; // stores the magnitude of the gradient for each update
 	int delta_size = LR_layer.get_theta_size();
-	Vec delta_update = Vec::Zero( delta_size );
+	//Vec delta_update = Vec::Zero( delta_size );
 	int global_update_size;
 
 	MPI_Op_create( (MPI_User_function *)reduce_gradient_update, 1, &op );
@@ -254,14 +247,16 @@ int main (int argc, char *argv[]) {
 		// sum updates across all partitions
 		MPI_Allreduce( 
 			delta_data,
-			delta_update.data(),
+			delta_data,
+			//delta_update.data(),
 			delta_size,
 			MPI_DOUBLE,
 			op,
 			MPI_COMM_WORLD
 		);
 		std::cout << "\nFINAL OUT taskid" << taskid << "\n" << delta_update << "\n";
-		LR_layer.set_delta( delta_update );
+		LR_layer.set_delta( delta_data );
+		// LR_layer.set_delta( delta_update );
 
 		// sum the update sizes
 		MPI_Allreduce( &update_size, &global_update_size, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
