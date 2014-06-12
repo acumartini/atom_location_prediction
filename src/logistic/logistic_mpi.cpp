@@ -58,9 +58,19 @@ void reduce_unique_labels( int *invec, int *inoutvec, int *len, MPI_Datatype *dt
 }
 
 void reduce_gradient_update( double *delta_in, double *delta_out, int *len, MPI_Datatype *dtype ) {
-	for ( int i=0; i<*len; ++i ) {
-		delta_out[i] = delta_in[i] + delta_data[i];
-	}
+	VecMap data( delta_data, *len );
+	VecMap in( delta_in, *len );
+	VecMap out( delta_out, *len );
+
+	out = in + out;
+	
+	std::cout << "data\n" << data << "\n";
+	std::cout << "in\n" << in << "\n";
+	std::cout << "out\n" << out << "\n";
+
+	// for ( int i=0; i<*len; ++i ) {
+	// 	delta_out[i] = delta_in[i] + delta_data[i];
+	// }
 }
 
 void reduce_X_min( double *X_min_in, double *X_min_out, int *len, MPI_Datatype *dtype ) {
