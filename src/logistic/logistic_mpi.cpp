@@ -31,8 +31,7 @@ ClassMap classmap; // a map of labels to label indices
 LayerSize numlabels;
 double *delta_data;
 double *X_min_ptr, *X_max_ptr, *X_min_data, *X_max_data;
-bool scaling = true;
-int taskid;
+bool scaling = true; // enable feature scaling
 
 
 // MPI reduce ops
@@ -78,22 +77,22 @@ int main (int argc, char *argv[]) {
 		batch_size = atoi( argv[2] ); // mini-batch processing
 		if ( batch_size == -1 ) { batch_size = INT_MIN; }
 		maxiter = atoi( argv[3] );
-		output_file = "LR.model";
+		output_file = "logistic.model";
 	} else if ( argc == 4 ) {
 		datadir = argv[1];
 		batch_size = atoi( argv[2] ); // mini-batch processing
 		if ( batch_size == -1 ) { batch_size = INT_MIN; }
 		maxiter = 100;
-		output_file = "LR.model";
+		output_file = "logistic.model";
 	} else {
 		datadir = argv[1];
 		batch_size = INT_MIN; // batch processing
 		maxiter = 100;
-		output_file = "LR.model";
+		output_file = "logistic.model";
 	}
 
 	// initialize/populate mpi specific vars local to each node
-	int  numtasks, len; //taskid, len;
+	int  numtasks, taskid, len;
 	char hostname[MPI_MAX_PROCESSOR_NAME];
 
 	MPI_Init(&argc, &argv);
@@ -199,20 +198,20 @@ int main (int argc, char *argv[]) {
 
 
 	/* INIT LOCAL CLASSIFIER */
-	LogisticRegression LR_layer( n, numlabels, true );
+	LogisticRegression logistic_layer( n, numlabels, true );
 
 
 	/* OPTIMIZATION */
 	int update_size; // stores the number of instances read for each update
 	double grad_mag; // stores the magnitude of the gradient for each update
-	int delta_size = LR_layer.get_theta_size();
+	int delta_size = logistic_layer.get_theta_size();
 	Vec delta_update = Vec::Zero( delta_size );
 	int global_update_size;
 
 	for ( int i=0; i<maxiter; ++i ) {
 		// compute gradient update
-		LR_layer.compute_gradient( X, y, batch_size, update_size );
-		delta_data = LR_layer.get_delta().data();
+		logistic_layer.compute_gradient( X, y, batch_size, update_size );
+		delta_data = logistic_layer.get_delta().data();
 
 		// sum updates across all partitions
 		MPI_Allreduce( 
@@ -223,21 +222,21 @@ int main (int argc, char *argv[]) {
 			MPI_SUM,
 			MPI_COMM_WORLD
 		);
-		LR_layer.set_delta( delta_update );
+		logistic_layer.set_delta( delta_update );
 
 		// sum the update sizes
 		MPI_Allreduce( &update_size, &global_update_size, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
 
 		// normalize + regularize gradient update
-		LR_layer.normalize_gradient( global_update_size );
-		LR_layer.regularize_gradient( global_update_size );
+		logistic_layer.normalize_gradient( global_update_size );
+		logistic_layer.regularize_gradient( global_update_size );
 
-		// update LR_layer parameters
-		if ( LR_layer.converged( grad_mag ) ) { break; }
+		// update logistic_layer parameters
+		if ( logistic_layer.converged( grad_mag ) ) { break; }
 		if ( taskid == MASTER ) {
 			printf( "%d : %lf\n", i+1, grad_mag );
 		}
-		LR_layer.update_theta();
+		logistic_layer.update_theta();
 	}
 
 
@@ -246,7 +245,7 @@ int main (int argc, char *argv[]) {
 		FILE *output;
 		output = fopen ( output_file.c_str(), "w" );
 		int idx;
-		Vec theta = LR_layer.get_theta();
+		Vec theta = logistic_layer.get_theta();
 
 		fprintf( output, "%lu\n", theta.size() );
 		for ( idx=0; idx<theta.size()-1; ++idx ) {
