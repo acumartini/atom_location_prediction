@@ -129,6 +129,7 @@ public:
 		if ( distributed ) { 
 			dW = X_batch.transpose() * error_batch;
 			db = error_batch.colwise().sum();
+			std::cout << "dW\n" << dW << "\n" << "db\n" << db << "\n\n";
 		} else {
 			dW = X_batch.transpose() * error_batch;
 			dW.noalias() += ( W * lambda ) / X_batch.rows(); // apply regularization
