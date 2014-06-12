@@ -92,7 +92,7 @@ public:
 	 * @params: X - matrix of m instances with n_in features
 	 * 			y - matrix of m labels with n_out columns
 	 */
-	void compute_gradient ( Mat& X, Mat& y, int batch_size, int& update_size ) {
+	void compute_gradient ( Mat& X, Mat& y, int batch_size, int& update_size, int taskid ) {
 		Mat probas = softmax( (X * W).rowwise() + b ); // compute P( y | X )
 		Mat error = probas - y; // compute the error
 		double *X_update_start, *error_update_start;
@@ -118,6 +118,7 @@ public:
 			error_update_start = error.data();
 			update_size = X.rows();
 		}
+		std::cout << "UPDATE taskid " << taskid << "\n" << X_batch << "\n" << error_batch << "\n\n";
 
 		// create a map over the instance data for the current batch/mini-batch
 		MatMap X_batch = MatMap( X_update_start, update_size, X.cols() );

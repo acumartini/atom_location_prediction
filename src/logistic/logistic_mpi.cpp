@@ -245,7 +245,7 @@ int main (int argc, char *argv[]) {
 	MPI_Op_create( (MPI_User_function *)reduce_gradient_update, 1, &op );
 	for ( int i=0; i<maxiter; ++i ) {
 		// compute gradient update
-		LR_layer.compute_gradient( X, y, batch_size, update_size );
+		LR_layer.compute_gradient( X, y, batch_size, update_size, taskid );
 		delta_data = LR_layer.get_delta().data();
 
 		// sum updates across all partitions
