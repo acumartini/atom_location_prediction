@@ -1,7 +1,7 @@
 \section{Design and Objectives}
 \label{design}
 
-To tackle this problem we run simulations of the CCD output for a given atom location using a raytracing simulation.  The output images are labeled according to atom location and used as a training set for machine learning algorithms.  The algorithms can then be used to generate a probabilistic distribution for the atom's location for a new CCD image.  
+To tackle this problem we run simulations of the CCD output for a given atom location using a raytracing simulation.  The output images are labeled according to atom location and used as training data for machine learning algorithms to create classification models.  The models can then be used to generate a probabilistic distribution for the atom's location for a new CCD image.  
 
 Figure \ref{fig:arch} describes the data flow of our architecture.  We begin by simulating the training and testing data using raytracing and filtering.  The filters will apply both generate several different training sets from a single image set.  The classification results for each training set are described below.  Some of the instances are selected from the image set for noise filtering.  The \emph{noisy} data is used to test our classification algorithms.
 
