@@ -22,6 +22,7 @@ ProbSize m, n; // numbers of instances and features
 ClassMap classmap; // a map of labels to label indices
 LayerSize numlabels;
 bool scaling = true;
+std::string outputfile = "logistic.probas";
 
 typedef std::vector<std::string> DataVec;
 
@@ -116,6 +117,15 @@ int main (int argc, char *argv[]) {
 	Mat cm = mlu::confusion_matrix( y, pred );
 	std::cout << cm << std::endl;
 
+
+	/* OUTPUT PROBABILITIES */
+	printf( "\nWriting Probabilities: %s\n", outputfile.c_str() );
+	std::ofstream file( outputfile );
+	if ( file.is_open() ) {
+		file << probas << std::end;
+	}
+	file.close();
+	
 
 	return 0;
 }
