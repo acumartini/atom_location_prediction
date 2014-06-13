@@ -159,7 +159,10 @@ int main (int argc, char *argv[]) {
 		MPI_Allreduce( X_max_tmp.data(), X_max.data(), X_max_tmp.size(), MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
 
 		// scale features using global min and max
-		mlu::scale_features( X, X_min, X_max, 1, 0 );
+		mlu::scale_features( X, X_min, X_max, 1, -1 );
+    }
+    if ( taskid == MASTER ) {
+    	std::cout << X << std::endl;
     }
 
 
@@ -202,6 +205,9 @@ int main (int argc, char *argv[]) {
 	// format the local label set into a matrix based on global class map
 	Mat y = mlu::format_labels( labels, classmap );
 	numlabels = (LayerSize) classmap.size();
+	if ( taskid == MASTER ) {
+    	std::cout << "\n\n\n" << y << std::endl;
+    }
 
 	// output total data loading time for each task
 	MPI_Barrier( MPI_COMM_WORLD );
