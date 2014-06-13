@@ -45,14 +45,14 @@ int main (int argc, char *argv[]) {
 	DataVec datavec;
 	mlu::count_instances( datadir, datavec, m );
 	printf( "\nWriting Instance Order: %s\n", "logistic.order" );
-	std::ofstream file( outputfile );
-	if ( file.is_open() ) {
+	std::ofstream file1( outputfile );
+	if ( file1.is_open() ) {
 		for ( auto& df : datavec ) {
-			file << df << "\t";
+			file1 << df << "\t";
 		}
-		file << std::endl;
+		file1 << std::endl;
 	}
-	file.close();
+	file1.close();
 
 	// determine number of features
 	mlu::count_features( datavec[0], n );
