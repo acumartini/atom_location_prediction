@@ -105,7 +105,7 @@ int main (int argc, char *argv[]) {
 
 	/* DATA PREPROCESSING */
 	if ( taskid == MASTER ) {
-		printf( "Loading and Preprocessing Data\n" );
+		printf( "\nLoading and Preprocessing Data\n" );
 	}
 	t1 = MPI_Wtime();
 
