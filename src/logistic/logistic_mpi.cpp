@@ -225,7 +225,7 @@ int main (int argc, char *argv[]) {
 	Vec delta_update = Vec::Zero( delta_size );
 	int global_update_size;
 	if ( taskid == MASTER ) {
-		printf( "iteration : magnitude : elapsed time\n" );
+		printf( "iteration : elapsed time : magnitude\n" );
 	}
 
 	for ( int i=0; i<maxiter; ++i ) {
@@ -256,7 +256,7 @@ int main (int argc, char *argv[]) {
 		t2 = MPI_Wtime();
 		if ( logistic_layer.converged( grad_mag ) ) { break; }
 		if ( taskid == MASTER ) {
-			printf( "%d : %lf : %lf\n", i+1, grad_mag, t2 - t1 );
+			printf( "%d : %lf : %lf\n", i+1, t2 - t1, grad_mag );
 		}
 		logistic_layer.update_theta();
 	}
