@@ -92,7 +92,7 @@ int main (int argc, char *argv[]) {
 	}
 
 	// initialize/populate mpi specific vars local to each node
-	double t1,t2; // elapsed time computation
+	double t1,t2, total; // elapsed time computation
 	int  numtasks, taskid, len;
 	char hostname[MPI_MAX_PROCESSOR_NAME];
 
@@ -227,6 +227,7 @@ int main (int argc, char *argv[]) {
 		printf( "iteration : elapsed time : magnitude\n" );
 	}
 
+	total = MPI_Wtime(); // total training time marker
 	for ( int i=0; i<maxiter; ++i ) {
 		// compute gradient update
 		t1 = MPI_Wtime();
@@ -258,6 +259,10 @@ int main (int argc, char *argv[]) {
 			printf( "%d : %lf : %lf\n", i+1, t2 - t1, grad_mag );
 		}
 		logistic_layer.update_theta();
+	}
+	t2 = MPI_Wtime();
+	if ( taskid == MASTER ) {
+		printf( "\nTotal Training Time %lf seconds\n", t2 - total );
 	}
 
 
