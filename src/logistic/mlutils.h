@@ -42,7 +42,7 @@ namespace mlu {
 		}
 	}
 
-	void count_features( std::string data_file, ProbSize& n ) {
+	void count_features( std::string datafile, ProbSize& n ) {
 		std::ifstream infile( datafile );
 		std::string line;
 		std::getline( infile, line );
