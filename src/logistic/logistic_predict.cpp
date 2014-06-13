@@ -75,14 +75,12 @@ int main (int argc, char *argv[]) {
 		}
 		data >> label;
 		labels[i] = label;
-		//printf( "label %lf\n", label );
 	}
 
     // perform feature scaling (optional)
     if ( scaling ) {
 		mlu::scale_features( X, 1, 0 );
     }
-	// std::cout << X << "\n";
 
 	/* FORMAT LABELS */
 	// format the local label set into a matrix based on global class map
