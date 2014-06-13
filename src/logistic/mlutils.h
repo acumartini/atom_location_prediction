@@ -68,7 +68,7 @@ namespace mlu {
 	void scale_features ( Mat& X, Vec& X_min, Vec& X_max, int new_max, int new_min ) {
 		Mat tmp = X.rowwise() - X_min;
 		Vec tmp2 = X_max - X_min;
-		tmp2 += 0.000001;
+		tmp2 = tmp2.array() + 0.000001;
 		tmp = tmp * tmp2.asDiagonal().inverse();
 		tmp = tmp.array() * (new_max - new_min);
 		tmp = tmp.array() + new_min;
