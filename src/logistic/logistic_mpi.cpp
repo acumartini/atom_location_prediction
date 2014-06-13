@@ -214,7 +214,6 @@ int main (int argc, char *argv[]) {
 
 
 	/* OPTIMIZATION */
-	MPI_Barrier( MPI_COMM_WORLD );
 	if ( taskid == MASTER ) {
 		printf( "\nPerforming Gradient Descent\n" );
 	}
