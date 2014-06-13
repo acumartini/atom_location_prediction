@@ -214,6 +214,7 @@ int main (int argc, char *argv[]) {
 
 
 	/* OPTIMIZATION */
+	MPI_Barrier( MPI_COMM_WORLD );
 	if ( taskid == MASTER ) {
 		printf( "\nPerforming Gradient Descent\n" );
 	}
@@ -267,7 +268,7 @@ int main (int argc, char *argv[]) {
 		output = fopen ( output_file.c_str(), "w" );
 		int idx;
 		Vec theta = logistic_layer.get_theta();
-		printf( "\nWriting Model to File: %s\n", output_file.c_str() );
+		printf( "\nWriting Model to File: %s\n\n", output_file.c_str() );
 
 		fprintf( output, "%lu\n", theta.size() );
 		for ( idx=0; idx<theta.size()-1; ++idx ) {
