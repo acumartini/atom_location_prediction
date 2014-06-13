@@ -122,10 +122,10 @@ int main (int argc, char *argv[]) {
 	printf( "\nWriting Probabilities: %s\n", outputfile.c_str() );
 	std::ofstream file( outputfile );
 	if ( file.is_open() ) {
-		file << probas << std::end;
+		file << probas << std::endl;
 	}
 	file.close();
-	
+
 
 	return 0;
 }
