@@ -320,8 +320,9 @@ Built distributed logistic regression classifier capable of multi-class classifi
 
 \begin{itemize}
 \item Data partitioning and feature scaling handled automatically
+\item Vectorized implementation using Eigen
 \item MPI with Allreduce and custom reduce fuctions
-\item Iterative performs gradient updates and reduces updates using summation
+\item Iteratively performs gradient updates, reduces updates summation, normalization occurs on all nodes
 \end{itemize}
 
 Unsuccessful attempt to use distributed SVM implementation to compare with our own classifier.
