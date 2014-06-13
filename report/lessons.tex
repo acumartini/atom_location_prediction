@@ -22,6 +22,3 @@ There were several opportunities for learning during development of the distribu
 Another important lesson came from designing the classifier to be flexible and scalable so that it can easily be applied to various size systems and datasets.  The first challenge was deciding how to partition the data based on task ID and the number of computation nodes.  Our initial design read from separate data folders such that the user was required to preprocess the data based on how they want the computation to be divided.  However, we quickly realized that the division of data should be handled by the classifier at runtime.  We accomplished this by allowing the user to place all data into a single folder and the loading the data on each node according to task ID.  This method assumes that all data instance are roughly equal in size, which is a safe assumption given the homogeneous nature of a classification problem.
 
 One interesting lesson we learned about distributed classification is that data must be extremely large for mini-batching to apply.  Distributed classification is already \emph{batching} the data across nodes, and mini-batching further divides these batches.  Therefore, the dataset must significantly exceed each nodes' computational capacity before mini-batching will be necessary.
-
-
-\subsection{Visualization}
