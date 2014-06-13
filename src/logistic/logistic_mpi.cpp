@@ -114,7 +114,7 @@ int main (int argc, char *argv[]) {
 	mlu::count_instances( datadir, datavec, num_inst );
 
 	// determine number of features
-	mlu::count_features( datadir, n );
+	mlu::count_features( datavec[0], n );
 
 
 	/* DATA INITIALIZATION */

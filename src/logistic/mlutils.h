@@ -42,8 +42,8 @@ namespace mlu {
 		}
 	}
 
-	void count_features( std::string datadir, ProbSize& n ) {
-		std::ifstream infile( datadir + "/0.dat" );
+	void count_features( std::string data_file, ProbSize& n ) {
+		std::ifstream infile( datafile );
 		std::string line;
 		std::getline( infile, line );
 	    std::istringstream iss( line );
