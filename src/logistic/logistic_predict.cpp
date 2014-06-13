@@ -51,7 +51,7 @@ int main (int argc, char *argv[]) {
 	// record prediction order
 	printf( "\nWriting Instance Order: %s\n", orderfile.c_str() );
 	std::ofstream file( orderfile );
-	if ( file1.is_open() ) {
+	if ( file.is_open() ) {
 		for ( auto& str : datavec ) {
 			unsigned found = str.find_last_of("/");
   			file << str.substr(found+1) << "\t";
@@ -129,11 +129,11 @@ int main (int argc, char *argv[]) {
 
 	/* OUTPUT PROBABILITIES */
 	printf( "\nWriting Probabilities: %s\n", outputfile.c_str() );
-	file( outputfile );
-	if ( file.is_open() ) {
-		file << probas << std::endl	;
+	std::ofstream file2( outputfile );
+	if ( file2.is_open() ) {
+		file2 << probas << std::endl	;
 	}
-	file.close();
+	file2.close();
 
 
 	return 0;
