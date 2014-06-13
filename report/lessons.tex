@@ -10,7 +10,7 @@
 Sharing the idea and details of the implementation of Poisson distribution based noise maker is quite a job. Due to lack of base support of Poisson distribution random number generator, a float number and the range of the floating number is quite interesting topic. The final result turns out to be a integer generator with a scaling shifting. Hence, we can satisfy our purpose and simplify the implementation at same time.
 
 %Adam talks about feature scaling here...
-
+To accomplish distributed feature scaling and label formating we need to need to create a custom MPI reduce operation that is capable of merging two sets of labels into a single unique set.  We learned that creating custom reducers can be the source of many bugs related to incorrect data pointers.  This was also the case when created custom reducers for gradient updates, which we discuss below.
 
 \subsection{Machine Learning}
 

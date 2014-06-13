@@ -106,9 +106,11 @@ int main (int argc, char *argv[]) {
 	// determine number of instances
 	DataVec datavec;
 	mlu::count_instances( datadir, datavec, num_inst );
+	printf( "taskid %d num_inst %lu\n", taskid, num_inst );
 
 	// determine number of features
 	mlu::count_features( datadir, n );
+	printf( "n %lu\n", n );
 
 
 	/* DATA INITIALIZATION */
@@ -119,6 +121,7 @@ int main (int argc, char *argv[]) {
 	size_t div = datavec.size() / numtasks;
 	ProbSize limit = ( taskid == numtasks - 1 ) ? num_inst : div * ( taskid + 1 );
 	m = limit - div * taskid;
+	printf( "limit %lu m %lu\n", limit, m );
 
     // danamically allocate data
 	Mat X( m, n );
