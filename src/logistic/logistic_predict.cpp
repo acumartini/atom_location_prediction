@@ -51,7 +51,7 @@ int main (int argc, char *argv[]) {
 	// record prediction order
 	printf( "\nWriting Instance Order: %s\n", orderfile.c_str() );
 	std::ofstream file( orderfile );
-	if ( file1.is_open() ) {
+	if ( file.is_open() ) {
 		for ( auto& str : datavec ) {
 			unsigned found = str.find_last_of("/");
   			file << str.substr(found+1) << "\t";
