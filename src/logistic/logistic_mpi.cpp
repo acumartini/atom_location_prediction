@@ -64,7 +64,6 @@ int main (int argc, char *argv[]) {
 	if ( argc > 5 || argc < 2 ) {
 		printf( "Usage: ./logistic_mpi <data_directory> <batch_size> "
 				"<max_iterations> <model_output_file>\n");
-		MPI_Finalize();
 		exit( 0 );
 	} else if ( argc == 5 ) {
 		datadir = argv[1];
