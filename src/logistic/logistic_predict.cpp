@@ -22,7 +22,7 @@ ProbSize m, n; // numbers of instances and features
 ClassMap classmap; // a map of labels to label indices
 LayerSize numlabels;
 bool scaling = true;
-std::string outputfile = "logistic.probas";
+std::string outputfile = "logistic.probas", orderfile = "logistic.order";
 
 typedef std::vector<std::string> DataVec;
 
@@ -44,20 +44,21 @@ int main (int argc, char *argv[]) {
 	// determine number of instances
 	DataVec datavec;
 	mlu::count_instances( datadir, datavec, m );
-	printf( "\nWriting Instance Order: %s\n", "logistic.order" );
-	std::ofstream file1( "logistic.order"  );
-	if ( file1.is_open() ) {
-		for ( auto& df : datavec ) {
-			unsigned found = df.find_last_of("/");
-  			file1  << df.substr(found+1) << "\t";
-		}
-		file1 << std::endl;
-	}
-	file1.close();
 
 	// determine number of features
 	mlu::count_features( datavec[0], n );
 
+	// record prediction order
+	printf( "\nWriting Instance Order: %s\n", orderfile.c_str() );
+	std::ofstream file( orderfile );
+	if ( file1.is_open() ) {
+		for ( auto& str : datavec ) {
+			unsigned found = str.find_last_of("/");
+  			file << str.substr(found+1) << "\t";
+		}
+		file << std::endl;
+	}
+	file.close();
 
 	/* DATA INITIALIZATION */
     // danamically allocate data
@@ -130,7 +131,7 @@ int main (int argc, char *argv[]) {
 
 	/* OUTPUT PROBABILITIES */
 	printf( "\nWriting Probabilities: %s\n", outputfile.c_str() );
-	std::ofstream file( outputfile );
+	file( outputfile );
 	if ( file.is_open() ) {
 		file << probas << std::endl	;
 	}
