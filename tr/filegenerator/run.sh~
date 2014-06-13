@@ -1,0 +1,13 @@
+#!/usr/bin/bash
+
+dir="~/prog/data/"
+outdir="~/prog/data_noise/"
+
+for i in $(ls ~/prog/data/)
+do
+    echo $i
+    export FIRST=$dir$i
+    export SECOND=$outdir$i
+    qsub -V -q batch -e err/$i -o log/$i sub.pbs
+
+done

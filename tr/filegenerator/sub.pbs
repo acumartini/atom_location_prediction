@@ -1,0 +1,3 @@
+#!/bin/bash
+
+eval "/home/users/wwe/diffyq/tr/filegenerator/a $FIRST $SECOND 31 5"
