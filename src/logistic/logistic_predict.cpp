@@ -45,10 +45,11 @@ int main (int argc, char *argv[]) {
 	DataVec datavec;
 	mlu::count_instances( datadir, datavec, m );
 	printf( "\nWriting Instance Order: %s\n", "logistic.order" );
-	std::ofstream file1( outputfile );
+	std::ofstream file1( "logistic.order"  );
 	if ( file1.is_open() ) {
 		for ( auto& df : datavec ) {
-			file1 << df << "\t";
+			unsigned found = df.find_last_of("/");
+  			file1  << df.substr(found+1) << "\t";
 		}
 		file1 << std::endl;
 	}
