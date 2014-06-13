@@ -3,6 +3,10 @@
 
 \subsection{Simulation}
 
+The initial plan of computing ray interference was unfortunately not completed due to time constraints, but the fully classical raytracer works as well as can be expected and is quite fast.
+
+One interesting aspect is that the system is a serial implementation, but high concurrency can be attained by running multiple threads using \verb|qsub| while scriping different arguments. While this is perhaps the most na\"ive way to implement parallelization, it is also highly effective for a massively parallel task, and was far more efficient than similar setups implemented with MPI or Cilk. It seems like this would be an effective way to introduce parallelization, since the perfomance gains are immediately clear.
+
 
 \subsection{Data Preprocessing}
 
