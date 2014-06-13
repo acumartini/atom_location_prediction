@@ -4,15 +4,58 @@
 Our development efforts are divided into sections based on our data flow architecture.  There is some overlap of effort in the data preprocessing step as this is the area of our development where Simulation and Machine Learning meet.  We describe each development stage in detail in the following subsections.
 
 \subsection{Simulation}
+The machine learning algorithm we implemented requires training for it to accurately predict an atom location when given just the CCD image. Thus, we first need to generate a large training set consisting of pairs of atom locations with CCD images. This is done by simulating CCD images for the atom located at different points.
 
-Wes talks about simulations here ...
+The essence of the simulation is starts with a flourescent atom at a chosen location, and then simulating how light emitted from the atom is refracted by the lens system and appears on the CCD screen. We opted for a classical raytracing approach. Rays are emitted in a random direction from the atom, and obey refraction via Snell's Law as they pass interfaces between different materials. When the rays intersect with the CCD plane, we increment an array value corresponding to which CCD pixel it hit.
 
-OLD TEXT:
-The essence of the simulation is starting with a flourescent atom at a chosen location, and then simulating how light emitted from the atom appears on the CCD. There are two approaches to simulating the generation of CCD images from a given atom location.
+\subsubsection{Raytracer Development}
+A custom barebones raytracer was designed from the ground up in C, the key design goals being that it should be simplistic, fast, and readily parallelizable. This was done since the features of most raytracing systems are unnessesary for our application, in part because:
+\begin{itemize}
+\item We only need first order refracted rays. No higher order or reflected rays are needed.
+\item We apriori know the order in which the rays will intersect surfaces.
+\item Elements of graphical raytracing systems are more extravagant than the simple intensity plots we need.
+\end{itemize}
 
-The first is a classical raytracing approach. Rays are emitted in a random direction from the atom, and obey refraction via Snell's Law as they pass interfaces between different materials. The rays also contain phase information for the purposes of determining interference. When the rays intersect with the CCD plane, we increment an array value corresponding to which CCD pixel it hit.
+Some important features that were implemented in the raytracer:
+\begin{itemize}
+\item Standard vector operations (projections, cross products, ray extrapolations, etc.)
+\item Structure for defining arbitrary surfaces and refractive indicies.
+\item Ray/Surface intersection routine.
+\item Calculation of surface normals.
+\item Implementation of Snell's law.
+\item Ray refraction routine.
+\item CCD image screen with histogram binning.
+\end{itemize}
+Each of these features were tested independantally by plotting ray traces with gnuplot. This was done in preparation for the more complex system with custom optics, which is harder to verify.
 
-The second approach is a full simulation of the linear wave equation. This is a full 3D simulation, and is much more computationally intensive. A field discretized into $~200\times 200\times 1000$ is given an initial value of zero everywhere except for a peak at our atom location, and then is stepped forward in time according to the linear wave equation. The essence of this algorithm is basic matrix multiplication, but with very large sparse matrices.
+\subsubsection{Imaging System}
+An imaging system consisting of a pair of custom aspheric lenses was then implemented with our raytracer surfaces. The system consists of five surfaces in all. The first two surfaces form the initial aspheric lens, the second two surfaces form the second aspheric lens, and the final surface forms the CCD image plane.
+
+\begin{figure}
+\includegraphics{asphere.png}
+\caption{Scale model of the atom imaging system.}
+\end{figure}
+
+For completeness, the spacing between the lenses is $90$mm, the focal point is $5mm$ from the lens, and lastly, the asphere lens profiles are given by
+\begin{equation}
+  Z(r) = \frac{ C r^2}{1 + \sqrt{1-(1+k)C^2r^2}} + \sum_{i=0}^{10}D_{2i}r^{2i}
+\end{equation}
+with the constants
+\begin{equation}
+\begin{tabular}{|c|c|}
+\hline
+\text{Parameter} & \text{Value} \\
+\hline
+C & -0.128 \\
+k & -0.824 \\ 
+D_0 & 17.705 \\
+D_2 & 2.11*10^{-2} \\
+D_4 & 8.71*10^{-2} \\
+\hline
+\end{tabular}
+\end{equation}
+
+
 
 \subsection{Data Preprocessing}
 
@@ -33,4 +76,4 @@ Training is finished when either the gradient has converged or the maximum numbe
 \subsection{Visualization}
 Visualization is particularly important for visualizing three dimensional volumes, and it may become essential for feedback as to whether our simulations are functioning properly, and for our presenting our project results. However, our project focus is not on programming the visualization methods ourselves, but using existing tools such as Visit or ParaView.
 
-The main items to be visualized are the field generated from the differential equation solvers, and the CCD images (which are a cross section of the field). We can also use these tools for post processing on the image data to highlight features for the benefit of the machine learning algorithm.
+The main items to be visualized are the rays traced through the imaging system, the CCD images, and finally a prediction of the atom location given a CCD image. We can also use these tools for post processing on the image data to highlight features for the benefit of the machine learning algorithm.
