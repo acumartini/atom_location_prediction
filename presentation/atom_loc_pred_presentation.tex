@@ -193,26 +193,23 @@ University of Oregon \\ % Your institution for the title page
 
 \begin{frame}{Input Data}
 
-
 \begin{figure}
-\centering
-\begin{subfigure}{.5\textwidth}
   \centering
-  \includegraphics[scale=0.4]{arch.png}
-  \caption{Clean training image.}
-  \label{fig:sub1}
-\end{subfigure}%
-\begin{subfigure}{.5\textwidth}
-  \centering
-  \includegraphics[scale=0.4]{arch.png}
-  \caption{Noise testing image.}
-  \label{fig:sub2}
-\end{subfigure}
-\caption{Traing and testing image examples.}
-\label{fig:test}
+  \includegraphics[scale=0.5]{ccd2D.png}
 \end{figure}
 
 \end{frame}
+
+\begin{frame}{Input Data}
+
+\begin{figure}
+  \centering
+  \includegraphics[scale=0.57]{ccd3D.png}
+\end{figure}
+
+\end{frame}
+
+
 
 \section{Design}
 
@@ -319,48 +316,71 @@ Our development efforts are divided into sections based on our data flow archite
 \end{frame}
 
 \begin{frame}{Machine Learning}
+Built distributed logistic regression classifier capable of multi-class classification and mini-batch processing:
 
 \begin{itemize}
-\item \textbf{Spark} -- 
-\item \textbf{HaLoop} -- 
-\item \textbf{Twister} -- 
+\item Data partitioning and feature scaling handled automatically
+\item MPI with Allreduce and custom reduce fuctions
+\item Iterative performs gradient updates and reduces updates using summation
 \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{Data Visualization}
+Used Mathematica to create contour plots to visual images and plots to demonstrate accuracy of the classifier.
+
+\begin{figure}
+\centering
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[scale=.2]{2-5.pdf}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[scale=.2]{4-3.pdf}
+\end{subfigure}
+\label{fig:test2}
+\end{figure}
 
 \end{frame}
 
 \begin{frame}{Data Visualization}
 
-\begin{itemize}
-\item \textbf{Spark} -- 
-\item \textbf{HaLoop} -- 
-\item \textbf{Twister} -- 
-\end{itemize}
+\begin{figure}[h]
+\begin{center}
+\includegraphics[scale=0.26]{2d.pdf}
+\end{center}
+\end{figure}
 
 \end{frame}
 
 
-\section{Lessons Learned}
 
-\begin{frame}{Lessons Learned}
-\textbf{Simulation}
-\begin{itemize}
+\section{Experiments}
 
-\end{itemize}
+\begin{frame}{Experiments}
+Trained and on two data, one small and one large to test scalability.  Prediction Results are 100\% accurate after only 10 iterations.
 
-\textbf{Data Preprocessing}
-\begin{itemize}
+\begin{figure}[h]
+\begin{center}
+\includegraphics[scale=0.4]{small_metrics.png}
+\caption{Performance gains for both data loading and iteration time on the small training set.}
+\label{fig:small}
+\end{center}
+\end{figure}
 
-\end{itemize}
+\end{frame}
 
-\textbf{Machine Learning}
-\begin{itemize}
+\begin{frame}{Experiments}
 
-\end{itemize}
-
-\textbf{Data Visualization}
-\begin{itemize}
-
-\end{itemize}
+\begin{figure}[h]
+\begin{center}
+\includegraphics[scale=0.5]{big_metrics.png}
+\caption{Performance gains for both data loading and iteration time on the big training set.}
+\label{fig:small}
+\end{center}
+\end{figure}
 
 \end{frame}
 
@@ -370,10 +390,10 @@ Our development efforts are divided into sections based on our data flow archite
 \begin{frame}{Conclusion}
 
 \begin{itemize}
-\item \textbf{Percolator} -- Developed by Google to replace MapReduce.  Updates only a portion of PageRank indices by propagating the influence of new, or altered, web pages.
-\item \textbf{Pregel} -- A general framework for superstep-based graphical updates.  Allows for dynamic changes to graph structure.
-\item \textbf{Ceil} -- Uses runtime analysis of dependency graphs to dynamically optimize execution.  Runtime analysis allows for detection of iterative/recursive patterns.
-\item \textbf{Flumejava} -- Preprocesses execution plan to generate a DAG, which is used to perform fusion-based optimizations.
+\item Implemented parallelized raytracer and generated lots of images
+\item Preprocessed images to create training and testing sets
+\item Successfully implemented and tested distributed logistic regression classifier using our training and testing dataset
+\item Visualized out results to prove classifier accuracy and performance
 \end{itemize}
 
 \end{frame}
