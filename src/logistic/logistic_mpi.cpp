@@ -92,6 +92,7 @@ int main (int argc, char *argv[]) {
 	}
 
 	// initialize/populate mpi specific vars local to each node
+	double t1,t2; // elapsed time computation
 	int  numtasks, taskid, len;
 	char hostname[MPI_MAX_PROCESSOR_NAME];
 
@@ -103,14 +104,17 @@ int main (int argc, char *argv[]) {
 
 
 	/* DATA PREPROCESSING */
+	if ( taskid == MASTER ) {
+		printf( "Loading and Preprocessing Data\n" );
+	}
+	t1 = MPI_Wtime();
+
 	// determine number of instances
 	DataVec datavec;
 	mlu::count_instances( datadir, datavec, num_inst );
-	printf( "taskid %d num_inst %lu\n", taskid, num_inst );
 
 	// determine number of features
 	mlu::count_features( datadir, n );
-	printf( "n %lu\n", n );
 
 
 	/* DATA INITIALIZATION */
@@ -121,7 +125,6 @@ int main (int argc, char *argv[]) {
 	size_t div = datavec.size() / numtasks;
 	ProbSize limit = ( taskid == numtasks - 1 ) ? num_inst : div * ( taskid + 1 );
 	m = limit - div * taskid;
-	printf( "limit %lu m %lu\n", limit, m );
 
     // danamically allocate data
 	Mat X( m, n );
@@ -200,20 +203,33 @@ int main (int argc, char *argv[]) {
 	Mat y = mlu::format_labels( labels, classmap );
 	numlabels = (LayerSize) classmap.size();
 
+	// output total data loading time for each task
+	MPI_Barrier( MPI_COMM_WORLD );
+    t2 = MPI_Wtime();
+	printf( "--- task %d loading time %lf\n", t2 - t1 ); 
+
 
 	/* INIT LOCAL CLASSIFIER */
 	LogisticRegression logistic_layer( n, numlabels, true );
 
 
 	/* OPTIMIZATION */
+	if ( taskid == MASTER ) {
+		printf( "\nPerforming Gradient Descent\n" );
+	}
+
 	int update_size; // stores the number of instances read for each update
 	double grad_mag; // stores the magnitude of the gradient for each update
 	int delta_size = logistic_layer.get_theta_size();
 	Vec delta_update = Vec::Zero( delta_size );
 	int global_update_size;
+	if ( taskid == MASTER ) {
+		printf( "iteration : magnitude : elapsed time\n" );
+	}
 
 	for ( int i=0; i<maxiter; ++i ) {
 		// compute gradient update
+		t1 = MPI_Wtime();
 		logistic_layer.compute_gradient( X, y, batch_size, update_size );
 		delta_data = logistic_layer.get_delta().data();
 
@@ -236,9 +252,10 @@ int main (int argc, char *argv[]) {
 		logistic_layer.regularize_gradient( global_update_size );
 
 		// update logistic_layer parameters
+		t2 = MPI_Wtime();
 		if ( logistic_layer.converged( grad_mag ) ) { break; }
 		if ( taskid == MASTER ) {
-			printf( "%d : %lf\n", i+1, grad_mag );
+			printf( "%d : %lf : %lf\n", i+1, grad_mag, t2 - t1 );
 		}
 		logistic_layer.update_theta();
 	}
@@ -250,6 +267,7 @@ int main (int argc, char *argv[]) {
 		output = fopen ( output_file.c_str(), "w" );
 		int idx;
 		Vec theta = logistic_layer.get_theta();
+		printf( "\nWriting Model to File: %s\n", output_file.c_str() );
 
 		fprintf( output, "%lu\n", theta.size() );
 		for ( idx=0; idx<theta.size()-1; ++idx ) {
