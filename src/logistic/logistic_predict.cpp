@@ -129,11 +129,11 @@ int main (int argc, char *argv[]) {
 
 	/* OUTPUT PROBABILITIES */
 	printf( "\nWriting Probabilities: %s\n", outputfile.c_str() );
-	file( outputfile );
-	if ( file.is_open() ) {
-		file << probas << std::endl	;
+	std::ofstream file2( outputfile );
+	if ( file2.is_open() ) {
+		file2 << probas << std::endl	;
 	}
-	file.close();
+	file2.close();
 
 
 	return 0;
