@@ -206,7 +206,7 @@ int main (int argc, char *argv[]) {
 	// output total data loading time for each task
 	MPI_Barrier( MPI_COMM_WORLD );
     t2 = MPI_Wtime();
-	printf( "--- task %d loading time %lf\n", t2 - t1 ); 
+	printf( "--- task %d loading time %lf\n", taskid, t2 - t1 ); 
 
 
 	/* INIT LOCAL CLASSIFIER */
