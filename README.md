@@ -1,4 +1,4 @@
-Predicting Atom Location <br>Using A Distributed Neural Network
+Predicting Atom Location <br>Using Distributed Logistic Regression
 ===============
 
-An implementation of a distributed neural network to solve a multi-class classification problem of predicting an atom's initial location given a propagation image.
+An implementation of distributed logistic regression to solve a multi-class classification problem of predicting an atom's initial location given a propagation image.
